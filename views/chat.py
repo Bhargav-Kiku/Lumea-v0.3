@@ -68,9 +68,15 @@ def view_chat():
     if len(st.session_state.chat_history) <= 1:
         qr_cols = st.columns(4)
         quick_replies = ["I'm feeling anxious", "I need someone to talk to", "Can you help me relax?", "I'm feeling better now"]
+        from utils.rate_limit import is_rate_limited, increment_message_count
+        
         for i, reply in enumerate(quick_replies):
             with qr_cols[i]:
                 if st.button(reply, key=f"qr_{i}", help="Click to send this message instantly", use_container_width=True):
+                    if is_rate_limited():
+                        st.warning("⚠️ Daily Limit Reached: You have typed 100 messages for today.")
+                        st.stop()
+                    increment_message_count()
                     with st.spinner("Analyzing..."):
                         emotion_label, emotion_score = analyze_emotion(reply)
                         
@@ -139,8 +145,17 @@ def view_chat():
                         st.markdown(audio_html, unsafe_allow_html=True)
 
     # --- Standard Chat Input ---
+    from utils.rate_limit import is_rate_limited, increment_message_count
+    
     if prompt := st.chat_input("How are you feeling today?"):
         
+        if is_rate_limited():
+            st.warning("⚠️ Daily Limit Reached: You have typed 100 messages for today. Reset will take place at midnight.")
+            st.stop()
+            
+        # 1. Increment Rate Limiting count
+        increment_message_count()
+            
         # 1. Analyze
         emotion_label, emotion_score = analyze_emotion(prompt)
         

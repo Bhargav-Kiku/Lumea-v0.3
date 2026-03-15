@@ -64,7 +64,27 @@ def sidebar_nav():
         
         st.markdown("<div style='margin-top: auto; padding-top: 2rem;'></div>", unsafe_allow_html=True)
         
-        st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        # --- Rate Limting Progress Bar (Custom HTML) ---
+        from utils.rate_limit import get_message_count, MAX_MESSAGES_PER_DAY
+        count = get_message_count()
+        percent = min(count / MAX_MESSAGES_PER_DAY, 1.0) * 100
+        
+        # Themes Colors
+        bar_bg = "rgba(0, 0, 0, 0.08)" if is_light else "rgba(255, 255, 255, 0.1)"
+        text_color = "#334155" if is_light else "#e2e8f0"
+        
+        progress_html = f"""
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: {text_color}; margin-bottom: 0.4rem; font-weight: 500;">
+                <span>Daily Limit</span>
+                <span>{count} / {MAX_MESSAGES_PER_DAY}</span>
+            </div>
+            <div style="background: {bar_bg}; height: 8px; border-radius: 4px; width: 100%; overflow: hidden;">
+                <div style="width: {percent}%; height: 100%; background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%); border-radius: 4px; transition: width 0.4s ease-in-out;"></div>
+            </div>
+        </div>
+        """
+        st.markdown(progress_html, unsafe_allow_html=True)
         
         if st.button("🚪 Sign Out", use_container_width=True, key="nav_signout"):
             supabase = st.session_state.get("supabase_client")

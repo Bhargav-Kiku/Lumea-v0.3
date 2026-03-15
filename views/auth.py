@@ -6,10 +6,10 @@ def view_auth():
     muted = "#64748b" if is_light else "#94a3b8"
     
     st.markdown(f"""
-    <div style="text-align: center; margin-top: 5vh; margin-bottom: 3rem;" class="animate-fade-in">
-        <h1 style="font-size: 4.5rem; margin-bottom: 0;">🌙</h1>
-        <h1 class="text-gradient" style="font-size: 3.5rem;">Lumea</h1>
-        <p style="color: {muted}; font-size: 1.2rem; letter-spacing: 0.5px;">Your Compassionate AI Companion</p>
+    <div style="text-align: center; margin-top: -1rem; margin-bottom: 1.5rem;" class="animate-fade-in">
+        <h1 style="font-size: 3.5rem; margin-bottom: -0.5rem;">🌙</h1>
+        <h1 class="text-gradient" style="font-size: 2.8rem; margin-bottom: 0.2rem;">Lumea</h1>
+        <p style="color: {muted}; font-size: 1rem; letter-spacing: 0.5px; margin-bottom: 0;">Your Compassionate AI Companion</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -24,11 +24,11 @@ def view_auth():
         
         with tab1:
             with st.form("login_form"):
-                st.markdown("<h3 style='margin-bottom: 1.5rem;'>Welcome Back</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 style='margin-bottom: 0.8rem; font-size: 1.4rem;'>Welcome Back</h3>", unsafe_allow_html=True)
                 email = st.text_input("Email", placeholder="Enter your email")
                 password = st.text_input("Password", type="password", placeholder="Enter your password")
                 
-                st.markdown("<br>", unsafe_allow_html=True)
+                # Reduced spacing buffer
                 submit = st.form_submit_button("Sign In ✨", use_container_width=True)
                 
                 if submit:
@@ -57,13 +57,13 @@ def view_auth():
                         
         with tab2:
             with st.form("register_form"):
-                st.markdown("<h3 style='margin-bottom: 1.5rem;'>Create Account</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 style='margin-bottom: 0.8rem; font-size: 1.4rem;'>Create Account</h3>", unsafe_allow_html=True)
                 username = st.text_input("Username", placeholder="Choose a username")
                 email = st.text_input("Email", placeholder="Enter your email")
                 password = st.text_input("Password", type="password", placeholder="Create a password (min 8 chars)")
                 confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password")
                 
-                st.markdown("<br>", unsafe_allow_html=True)
+                # Reduced spacing buffer
                 submit_reg = st.form_submit_button("Join Lumea 🌟", use_container_width=True)
                 
                 if submit_reg:
