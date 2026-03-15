@@ -20,19 +20,61 @@ st.set_page_config(
 
 # --- LOAD CSS ---
 def load_css():
+    theme = st.session_state.get('theme', 'dark')
+    css_file = "style_dark.css" if theme == "dark" else "style_light.css"
+    
     try:
-        with open("style.css", "r") as f:
+        with open(css_file, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
-        pass # Fallback if style.css is missing
+        pass # Fallback if missing
 
 load_css()
+
+# --- FLOATING THEME TOGGLE ---
+def render_theme_toggle():
+    """Uses a native Streamlit toggle repositioned to top-right via CSS."""
+    theme = st.session_state.get('theme', 'dark')
+    is_dark = theme == 'dark'
+
+    # Inject CSS that moves the LAST toggle rendered on the page to the top-right corner
+    # We wrap it in a container div with a known ID using st.markdown trick
+    st.markdown("""
+    <style>
+    /* Float the theme toggle to top-right */
+    div[data-testid="stToggle"]:last-of-type {
+        position: fixed !important;
+        top: 12px !important;
+        right: 80px !important;
+        z-index: 9999 !important;
+        background: transparent !important;
+    }
+    div[data-testid="stToggle"]:last-of-type label span {
+        font-size: 0.85rem !important;
+        color: rgba(255,255,255,0.7) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # The actual native toggle — Streamlit handles the click natively
+    toggled = st.toggle("☀️ Light" if is_dark else "🌙 Dark", value=not is_dark, key="theme_toggle_native")
+
+    # If value changed, flip theme
+    is_now_light = toggled
+    desired_theme = 'light' if is_now_light else 'dark'
+    if desired_theme != theme:
+        st.session_state.theme = desired_theme
+        st.rerun()
+
+render_theme_toggle()
 
 # --- INITIALIZE STATE & SUPABASE ---
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'user' not in st.session_state:
     st.session_state.user = None
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = [
         {"role": "assistant", "content": "Hi there. I'm Lumea, your mental health companion. How are you feeling today?"}

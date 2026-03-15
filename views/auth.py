@@ -2,11 +2,14 @@ import streamlit as st
 
 def view_auth():
     """Login and Registration View with Glassmorphism Design"""
-    st.markdown("""
+    is_light = st.session_state.get('theme', 'dark') == 'light'
+    muted = "#64748b" if is_light else "#94a3b8"
+    
+    st.markdown(f"""
     <div style="text-align: center; margin-top: 5vh; margin-bottom: 3rem;" class="animate-fade-in">
         <h1 style="font-size: 4.5rem; margin-bottom: 0;">🌙</h1>
         <h1 class="text-gradient" style="font-size: 3.5rem;">Lumea</h1>
-        <p style="color: #94a3b8; font-size: 1.2rem; letter-spacing: 0.5px;">Your Compassionate AI Companion</p>
+        <p style="color: {muted}; font-size: 1.2rem; letter-spacing: 0.5px;">Your Compassionate AI Companion</p>
     </div>
     """, unsafe_allow_html=True)
     

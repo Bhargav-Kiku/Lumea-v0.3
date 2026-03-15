@@ -158,6 +158,7 @@ button[kind="secondary"]:hover {
 .text-gradient {
     background: linear-gradient(135deg, #818cf8 0%, #d8b4fe 50%, #f472b6 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
 }
