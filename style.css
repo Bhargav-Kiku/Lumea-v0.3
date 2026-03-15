@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* Base Font & Background */
+html, body, [class*="css"] {
+    font-family: 'Outfit', sans-serif;
+}
+
+.stApp {
+    background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
+    color: #f8fafc;
+}
+
+/* Hide unneeded elements */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {background: transparent !important;}
+
+/* Glassmorphism Cards */
+.glass-card, div[data-testid="stVerticalBlockBorderWrapper"] > div:first-child {
+    background: rgba(30, 41, 59, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 24px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 0.2rem;
+}
+
+.glass-card:hover, div[data-testid="stVerticalBlockBorderWrapper"]:hover > div:first-child {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.25) !important;
+    border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+.feature-card {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(139, 92, 246, 0.5);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+}
+
+/* Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+    width: 100%;
+}
+
+.stButton > button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5) !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
+}
+
+/* Outline/Secondary button override based on Streamlit's secondary class if needed */
+button[kind="secondary"] {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    box-shadow: none !important;
+}
+button[kind="secondary"]:hover {
+    background: rgba(51, 65, 85, 0.8) !important;
+    border: 1px solid rgba(168, 85, 247, 0.5) !important;
+}
+
+/* Inputs */
+.stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div > div {
+    background: rgba(15, 23, 42, 0.7) !important;
+    border: 1px solid rgba(148, 163, 184, 0.2) !important;
+    color: #f8fafc !important;
+    border-radius: 12px !important;
+    padding: 0.75rem 1rem !important;
+    font-family: 'Outfit', sans-serif !important;
+    transition: all 0.3s ease;
+}
+
+.stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus, .stSelectbox > div > div > div:focus {
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2) !important;
+}
+
+/* Chat Input Overrides */
+[data-testid="stChatInput"] {
+    background: rgba(30, 41, 59, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    border-radius: 20px !important;
+}
+
+[data-testid="stChatMessage"] {
+    background-color: transparent !important;
+    padding: 1rem 0;
+}
+
+[data-testid="stChatMessage"] [data-testid="chatAvatarIcon-user"] {
+    background-color: #6366f1;
+}
+
+[data-testid="stChatMessage"] [data-testid="chatAvatarIcon-assistant"] {
+    background-color: #a855f7;
+}
+
+/* Streamlit Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1rem;
+    background: rgba(30, 41, 59, 0.4);
+    padding: 0.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 12px !important;
+    padding: 0.5rem 1.5rem !important;
+    color: #94a3b8 !important;
+    transition: all 0.3s ease;
+}
+
+.stTabs [aria-selected="true"] {
+    background: rgba(168, 85, 247, 0.2) !important;
+    color: #f3e8ff !important;
+    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.4) !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Text Gradients */
+.text-gradient {
+    background: linear-gradient(135deg, #818cf8 0%, #d8b4fe 50%, #f472b6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* Sidebar Customization */
+section[data-testid="stSidebar"] {
+    background: rgba(15, 23, 42, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Metrics / Plotly container backgrounds */
+.js-plotly-plot .plotly .bg {
+    fill: transparent !important;
+}
