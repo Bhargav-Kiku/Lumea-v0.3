@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import base64
 from components.sidebar import sidebar_nav
 from utils.ai_client import analyze_emotion, get_groq_chat_stream, text_to_audio_bytes
 from utils.supabase_client import create_chat_session, get_session_messages, save_chat_message
@@ -126,7 +127,16 @@ def view_chat():
                 if st.session_state.get('auto_read_audio'):
                     audio_fp = text_to_audio_bytes(full_response)
                     if audio_fp:
-                        st.audio(audio_fp, format='audio/mp3', autoplay=True)
+                        b64 = base64.b64encode(audio_fp.getvalue()).decode()
+                        audio_html = f'''
+                        <audio autoplay="true" style="display:none;">
+                            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+                        </audio>
+                        <div class="speaking-animation">
+                            🎙️ Lumea is speaking...
+                        </div>
+                        '''
+                        st.markdown(audio_html, unsafe_allow_html=True)
 
     # --- Standard Chat Input ---
     if prompt := st.chat_input("How are you feeling today?"):
@@ -168,7 +178,16 @@ def view_chat():
                 if st.session_state.get('auto_read_audio'):
                     audio_fp = text_to_audio_bytes(full_response)
                     if audio_fp:
-                        st.audio(audio_fp, format='audio/mp3', autoplay=True)
+                        b64 = base64.b64encode(audio_fp.getvalue()).decode()
+                        audio_html = f'''
+                        <audio autoplay="true" style="display:none;">
+                            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+                        </audio>
+                        <div class="speaking-animation">
+                            🎙️ Lumea is speaking...
+                        </div>
+                        '''
+                        st.markdown(audio_html, unsafe_allow_html=True)
         
         st.session_state.chat_history.append({"role": "assistant", "content": full_response.strip()})
         ensure_session_exists_and_save(supabase, user, "assistant", full_response.strip())
