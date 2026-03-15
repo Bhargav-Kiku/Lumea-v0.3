@@ -3,6 +3,9 @@ import requests
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
+import edge_tts
+import asyncio
+import io
 
 # Hugging Face Emotion API
 HF_API_URL = "https://router.huggingface.co/hf-inference/models/j-hartmann/emotion-english-distilroberta-base"
@@ -109,4 +112,32 @@ def get_groq_chat_stream(messages, current_emotion=None):
                 
     except Exception as e:
         yield f"*(An error occurred connecting to my thought engine: {str(e)})*"
+
+async def _async_text_to_audio(clean_text: str) -> io.BytesIO:
+    """Async helper to generate edge-tts speech."""
+    voice = "en-US-AriaNeural" # Emotional, warm female voice
+    communicate = edge_tts.Communicate(clean_text, voice)
+    
+    fp = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            fp.write(chunk["data"])
+    fp.seek(0)
+    return fp
+
+def text_to_audio_bytes(text: str):
+    """
+    Converts text to an mp3 audio byte stream using Edge-TTS.
+    Returns BytesIO object.
+    """
+    try:
+        # Process a cleaned version of the text to avoid it reading out Markdown characters
+        clean_text = text.replace("*", "").replace("#", "").replace("_", "")
+        if not clean_text.strip():
+            return None
+            
+        return asyncio.run(_async_text_to_audio(clean_text))
+    except Exception as e:
+        print(f"TTS Error: {e}")
+        return None
 

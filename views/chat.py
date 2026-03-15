@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 from components.sidebar import sidebar_nav
-from utils.ai_client import analyze_emotion, get_groq_chat_stream
+from utils.ai_client import analyze_emotion, get_groq_chat_stream, text_to_audio_bytes
 from utils.supabase_client import create_chat_session, get_session_messages, save_chat_message
 
 def init_chat_state():
@@ -57,6 +57,11 @@ def view_chat():
         <p style="color: #94a3b8;">I'm here to listen and support you. Take your time, and share what's on your mind.</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Audio Settings
+    c1, c2 = st.columns([8, 2])
+    with c2:
+        auto_read_audio = st.toggle("🔊 Read Replies Aloud", value=st.session_state.get('auto_read_audio', False), key="auto_read_audio")
     
     # Quick Replies below header (Only show if history is just the greeting)
     if len(st.session_state.chat_history) <= 1:
@@ -116,7 +121,12 @@ def view_chat():
                 
                 st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                 ensure_session_exists_and_save(supabase, user, "assistant", full_response)
-                st.rerun()
+                
+                # Auto-play audio if enabled
+                if st.session_state.get('auto_read_audio'):
+                    audio_fp = text_to_audio_bytes(full_response)
+                    if audio_fp:
+                        st.audio(audio_fp, format='audio/mp3', autoplay=True)
 
     # --- Standard Chat Input ---
     if prompt := st.chat_input("How are you feeling today?"):
@@ -153,10 +163,15 @@ def view_chat():
             with st.chat_message("assistant", avatar="🌙"):
                 stream = get_groq_chat_stream(st.session_state.chat_history, current_emotion=emotion_label)
                 full_response = st.write_stream(stream)
+                
+                # Auto-play audio if enabled
+                if st.session_state.get('auto_read_audio'):
+                    audio_fp = text_to_audio_bytes(full_response)
+                    if audio_fp:
+                        st.audio(audio_fp, format='audio/mp3', autoplay=True)
         
         st.session_state.chat_history.append({"role": "assistant", "content": full_response.strip()})
         ensure_session_exists_and_save(supabase, user, "assistant", full_response.strip())
-        st.rerun()
 
 
 def ensure_session_exists_and_save(supabase, user, role, content, emotion=None, score=None):
