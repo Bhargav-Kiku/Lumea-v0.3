@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="Lumea - AI Mental Health Companion",
     page_icon="🌙",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # --- LOAD CSS ---
