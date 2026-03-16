@@ -4,6 +4,7 @@ import base64
 from components.sidebar import sidebar_nav
 from utils.ai_client import analyze_emotion, get_groq_chat_stream, text_to_audio_bytes
 from utils.supabase_client import create_chat_session, get_session_messages, save_chat_message
+from utils.safety import is_self_harm_risk
 
 def init_chat_state():
     """Initializes chat history based on the selected session in the sidebar."""
@@ -58,6 +59,22 @@ def view_chat():
         <p style="color: #94a3b8;">I'm here to listen and support you. Take your time, and share what's on your mind.</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Safety Support Warning
+    if st.session_state.get('self_harm_warning_triggered', False):
+        st.markdown("""
+        <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: #ef4444; margin-top: 0;">🤝 You matter to us</h3>
+            <p style="color: #fca5a5;">If you are feeling overwhelmed, please know that you are not alone. Consider reaching out for professional support or talking with friends and family.</p>
+            <hr style="border-color: rgba(220, 38, 38, 0.2); margin: 1rem 0;">
+            <p style="margin-bottom: 0.5rem; font-weight: 500; color: #fecaca;">📞 Helplines in India:</p>
+            <ul style="margin-top: 0; padding-left: 1.5rem; color: #e2e8f0;">
+                <li><b>Vandrevala Foundation:</b> <span style="color: #fca5a5;">9999 666 555</span> (24x7)</li>
+                <li><b>AASRA:</b> <span style="color: #fca5a5;">9820466726</span> (24x7)</li>
+                <li><b>Kiran:</b> <span style="color: #fca5a5;">1800-599-0019</span> (24x7)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Audio Settings
     c1, c2 = st.columns([8, 2])
@@ -119,30 +136,31 @@ def view_chat():
     if st.session_state.get('pending_ai_response', False):
         st.session_state.pending_ai_response = False
         with chat_container:
-            with st.chat_message("assistant", avatar="🌙"):
-                last_user_msg = [m for m in st.session_state.chat_history if m["role"] == "user"][-1]
-                ctx_emotion = last_user_msg.get("emotion")
-                
-                stream = get_groq_chat_stream(st.session_state.chat_history, current_emotion=ctx_emotion)
-                full_response = st.write_stream(stream)
-                
-                st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-                ensure_session_exists_and_save(supabase, user, "assistant", full_response)
-                
-                # Auto-play audio if enabled
-                if st.session_state.get('auto_read_audio'):
-                    audio_fp = text_to_audio_bytes(full_response)
-                    if audio_fp:
-                        b64 = base64.b64encode(audio_fp.getvalue()).decode()
-                        audio_html = f'''
-                        <audio autoplay="true" style="display:none;">
-                            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-                        </audio>
-                        <div class="speaking-animation">
-                            🎙️ Lumea is speaking...
-                        </div>
-                        '''
-                        st.markdown(audio_html, unsafe_allow_html=True)
+            if not st.session_state.get('self_harm_warning_triggered', False):
+                with st.chat_message("assistant", avatar="🌙"):
+                    last_user_msg = [m for m in st.session_state.chat_history if m["role"] == "user"][-1]
+                    ctx_emotion = last_user_msg.get("emotion")
+                    
+                    stream = get_groq_chat_stream(st.session_state.chat_history, current_emotion=ctx_emotion)
+                    full_response = st.write_stream(stream)
+                    
+                    st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                    ensure_session_exists_and_save(supabase, user, "assistant", full_response)
+                    
+                    # Auto-play audio if enabled
+                    if st.session_state.get('auto_read_audio'):
+                        audio_fp = text_to_audio_bytes(full_response)
+                        if audio_fp:
+                            b64 = base64.b64encode(audio_fp.getvalue()).decode()
+                            audio_html = f'''
+                            <audio autoplay="true" style="display:none;">
+                                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+                            </audio>
+                            <div class="speaking-animation">
+                                🎙️ Lumea is speaking...
+                            </div>
+                            '''
+                            st.markdown(audio_html, unsafe_allow_html=True)
 
     # === Voice Input Toolbar ===
     from streamlit_mic_recorder import mic_recorder
@@ -194,6 +212,11 @@ def view_chat():
                     with st.spinner("Analyzing transcript..."):
                         emotion_label, emotion_score = analyze_emotion(transcript)
                         
+                    # Check for self-harm risk
+                    negative_emotions = ["😢 Sadness", "😠 Anger", "😨 Fear", "🤢 Disgust"]
+                    if is_self_harm_risk(transcript) or (emotion_label in negative_emotions and emotion_score > 50.0):
+                        st.session_state.self_harm_warning_triggered = True
+                      
                     user_msg = {
                         "role": "user", 
                         "content": transcript,
@@ -222,6 +245,11 @@ def view_chat():
         # 1. Analyze
         emotion_label, emotion_score = analyze_emotion(prompt)
         
+        # Check for self-harm risk
+        negative_emotions = ["😢 Sadness", "😠 Anger", "😨 Fear", "🤢 Disgust"]
+        if is_self_harm_risk(prompt) or (emotion_label in negative_emotions and emotion_score > 50.0):
+            st.session_state.self_harm_warning_triggered = True
+      
         # 2. Append & Save DB User msg
         user_msg = {
             "role": "user", 
@@ -236,6 +264,15 @@ def view_chat():
         with chat_container:
             with st.chat_message("user", avatar="👤"):
                 st.markdown(prompt)
+                
+                if is_self_harm_risk(prompt):
+                    st.markdown("""
+                    <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 8px; padding: 1rem; margin: 0.5rem 0;">
+                        <span style="color: #ef4444; font-weight: 500;">🤝 You matter to us.</span> Consider reaching out for support:
+                        <br><b>Vandrevala:</b> 9999 666 555 | <b>AASRA:</b> 9820466726
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
                 if emotion_label:
                     badge_html = f"""
                     <div style="display: inline-block; background: rgba(168, 85, 247, 0.15); 
@@ -248,27 +285,33 @@ def view_chat():
                     st.markdown(badge_html, unsafe_allow_html=True)
                     
             # 4. Stream & Save DB AI Response
-            with st.chat_message("assistant", avatar="🌙"):
-                stream = get_groq_chat_stream(st.session_state.chat_history, current_emotion=emotion_label)
-                full_response = st.write_stream(stream)
-                
-                # Auto-play audio if enabled
-                if st.session_state.get('auto_read_audio'):
-                    audio_fp = text_to_audio_bytes(full_response)
-                    if audio_fp:
-                        b64 = base64.b64encode(audio_fp.getvalue()).decode()
-                        audio_html = f'''
-                        <audio autoplay="true" style="display:none;">
-                            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-                        </audio>
-                        <div class="speaking-animation">
-                            🎙️ Lumea is speaking...
-                        </div>
-                        '''
-                        st.markdown(audio_html, unsafe_allow_html=True)
+            if not st.session_state.get('self_harm_warning_triggered', False):
+                with st.chat_message("assistant", avatar="🌙"):
+                    stream = get_groq_chat_stream(st.session_state.chat_history, current_emotion=emotion_label)
+                    full_response = st.write_stream(stream)
+                    
+                    # Auto-play audio if enabled
+                    if st.session_state.get('auto_read_audio'):
+                        audio_fp = text_to_audio_bytes(full_response)
+                        if audio_fp:
+                            b64 = base64.b64encode(audio_fp.getvalue()).decode()
+                            audio_html = f'''
+                            <audio autoplay="true" style="display:none;">
+                                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+                            </audio>
+                            <div class="speaking-animation">
+                                🎙️ Lumea is speaking...
+                            </div>
+                            '''
+                            st.markdown(audio_html, unsafe_allow_html=True)
         
-        st.session_state.chat_history.append({"role": "assistant", "content": full_response.strip()})
-        ensure_session_exists_and_save(supabase, user, "assistant", full_response.strip())
+        if not st.session_state.get('self_harm_warning_triggered', False):
+            st.session_state.chat_history.append({"role": "assistant", "content": 'full_response' in locals() and full_response.strip() or ""})
+            ensure_session_exists_and_save(supabase, user, "assistant", 'full_response' in locals() and full_response.strip() or "")
+
+    # --- Global Reset for Next Cycle ---
+    if st.session_state.get('self_harm_warning_triggered', False):
+        st.session_state.self_harm_warning_triggered = False
 
 
 def ensure_session_exists_and_save(supabase, user, role, content, emotion=None, score=None):
