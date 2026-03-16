@@ -14,7 +14,7 @@ For detailed visual representations of the system, including **Use Case Diagrams
 
 ### Frontend & UI Framework
 - **[Streamlit](https://streamlit.io/)**: Powers the modular web application interface with responsive layout and interactive elements.
-- **Custom CSS**: Dynamic stylesheets (`style_light.css` & `style_dark.css`) for immersive dark/light modes and floating theme toggles.
+- **Custom CSS**: Dynamic stylesheets (`assets/style_light.css` & `assets/style_dark.css`) for immersive dark/light modes and floating theme toggles.
 
 ### Backend & AI Analytics
 - **Python**: Core application logic and API orchestration.

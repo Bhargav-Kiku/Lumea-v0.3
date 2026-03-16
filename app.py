@@ -21,7 +21,7 @@ st.set_page_config(
 # --- LOAD CSS ---
 def load_css():
     theme = st.session_state.get('theme', 'dark')
-    css_file = "style_dark.css" if theme == "dark" else "style_light.css"
+    css_file = "assets/style_dark.css" if theme == "dark" else "assets/style_light.css"
     
     try:
         with open(css_file, "r") as f:
