@@ -141,3 +141,26 @@ def text_to_audio_bytes(text: str):
         print(f"TTS Error: {e}")
         return None
 
+def transcribe_audio_groq(audio_bytes: bytes, filename: str = "input.wav"):
+    """
+    Transcribes audio bytes to text using Groq's Whisper API.
+    """
+    load_dotenv(override=True)
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
+    if not groq_api_key or groq_api_key == "your_groq_api_key_here":
+        return None
+        
+    try:
+        from groq import Groq
+        client = Groq(api_key=groq_api_key)
+        transcription = client.audio.transcriptions.create(
+            file=(filename, audio_bytes),
+            model="whisper-large-v3", 
+            response_format="json"
+        )
+        return transcription.text
+    except Exception as e:
+        print(f"Groq Transcription Error: {e}")
+        return None
+

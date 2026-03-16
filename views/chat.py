@@ -144,6 +144,70 @@ def view_chat():
                         '''
                         st.markdown(audio_html, unsafe_allow_html=True)
 
+    # === Voice Input Toolbar ===
+    from streamlit_mic_recorder import mic_recorder
+    from utils.ai_client import transcribe_audio_groq
+    from utils.rate_limit import is_rate_limited, increment_message_count
+
+    with st.container():
+        c_mic, c_spacer = st.columns([1, 9])
+        with c_mic:
+            st.markdown("""
+            <style>
+            div[data-testid="stColumn"] .stMicRecorder button {
+                border-radius: 50% !important;
+                width: 42px !important;
+                height: 42px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: rgba(168, 85, 247, 0.15) !important;
+                border: 1px solid rgba(168, 85, 247, 0.4) !important;
+                color: #d8b4fe !important;
+                padding: 0 !important;
+            }
+            div[data-testid="stColumn"] .stMicRecorder button:hover {
+                background: rgba(168, 85, 247, 0.25) !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            audio_state = mic_recorder(
+                start_prompt="🎤",
+                stop_prompt="⏹️",
+                just_once=True,
+                key="voice_input_mic"
+            )
+
+        if audio_state and audio_state.get('bytes'):
+            if is_rate_limited():
+                st.warning("⚠️ Daily Limit Reached: You have typed 100 messages for today.")
+                st.stop()
+                
+            increment_message_count()
+            st.write(f"🔬 **Debug**: Audio size: {len(audio_state['bytes'])} bytes")
+            with st.spinner("🎙️ Transcribing voice..."):
+                # mic_recorder returns bytes
+                transcript = transcribe_audio_groq(audio_state['bytes'])
+                
+                if transcript and transcript.strip():
+                    with st.spinner("Analyzing transcript..."):
+                        from utils.ai_client import analyze_emotion
+                        emotion_label, emotion_score = analyze_emotion(transcript)
+                        
+                    user_msg = {
+                        "role": "user", 
+                        "content": transcript,
+                        "emotion": emotion_label,
+                        "score": emotion_score
+                    }
+                    st.session_state.chat_history.append(user_msg)
+                    ensure_session_exists_and_save(supabase, user, "user", transcript, emotion_label, emotion_score)
+                    st.session_state.pending_ai_response = True
+                    st.rerun()
+                else:
+                    st.error("❌ Audio transcription failed or empty. Please speak clearly.")
+
     # --- Standard Chat Input ---
     from utils.rate_limit import is_rate_limited, increment_message_count
     
