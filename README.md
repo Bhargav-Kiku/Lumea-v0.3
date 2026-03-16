@@ -148,7 +148,7 @@ streamlit run app.py
 
 - Bhargav Kikani
 - Yash Rank
-- Jenil Gandi
+- Jenil Gandhi
 - Viral Nayi
 
 ---
