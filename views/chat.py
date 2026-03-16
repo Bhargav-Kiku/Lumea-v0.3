@@ -192,7 +192,6 @@ def view_chat():
                 
                 if transcript and transcript.strip():
                     with st.spinner("Analyzing transcript..."):
-                        from utils.ai_client import analyze_emotion
                         emotion_label, emotion_score = analyze_emotion(transcript)
                         
                     user_msg = {
