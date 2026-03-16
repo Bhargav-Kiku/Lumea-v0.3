@@ -5,6 +5,57 @@ def view_landing():
     is_light = st.session_state.get('theme', 'dark') == 'light'
     muted = "#64748b" if is_light else "#94a3b8"
     
+    # Firefly Effect Generation
+    import random
+    firefly_count = 25
+    firefly_html = ""
+    style_injection = "<style>\n"
+    
+    for i in range(firefly_count):
+        firefly_id = f"ff-{i}"
+        size = random.randint(4, 9)
+        x_pos = random.uniform(5, 95)
+        y_pos = random.uniform(10, 90) # keep mostly in content bounds
+        x_move = random.uniform(-80, 80)
+        y_move = random.uniform(-80, 80)
+        duration = random.uniform(12, 25)
+        delay = random.uniform(0, 10)
+        
+        firefly_html += f'<div class="firefly" id="{firefly_id}"></div>\n'
+        style_injection += f"""
+        #{firefly_id} {{
+            width: {size}px;
+            height: {size}px;
+            left: {x_pos}vw;
+            top: {y_pos}vh;
+            animation: float-{i} {duration}s ease-in-out {delay}s infinite alternate, twinkle {duration/2}s ease-in-out {delay}s infinite alternate;
+        }}
+        @keyframes float-{i} {{
+            0% {{ transform: translate(0, 0); }}
+            50% {{ transform: translate({x_move*0.5}px, {y_move*0.4}px); }}
+            100% {{ transform: translate({x_move}px, {y_move}px); }}
+        }}
+        """
+        
+    style_injection += """
+    .firefly {
+        position: fixed;
+        border-radius: 50%;
+        background: #facc15;
+        box-shadow: 0 0 8px #facc15, 0 0 15px #eab308, 0 0 22px rgba(250, 204, 21, 0.4);
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: 100; /* Floating visual layer but background behind most content overlays */
+    }
+    @keyframes twinkle {
+        0%, 100% { opacity: 0.15; transform: scale(0.8); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+    }
+    </style>
+    """
+    st.markdown(style_injection.strip(), unsafe_allow_html=True)
+    st.markdown(firefly_html.strip(), unsafe_allow_html=True)
+    
     # Hero Section
     st.markdown(f"""
     <style>
