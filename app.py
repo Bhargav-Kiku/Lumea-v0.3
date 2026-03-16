@@ -9,6 +9,7 @@ from views.dashboard import view_dashboard
 from views.chat import view_chat
 from views.mood_tracker import view_mood_tracker
 from views.journal import view_journal
+from views.landing import view_landing
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -80,14 +81,17 @@ if 'chat_history' not in st.session_state:
         {"role": "assistant", "content": "Hi there. I'm Lumea, your mental health companion. How are you feeling today?"}
     ]
 if 'page' not in st.session_state:
-    st.session_state.page = 'home'
+    st.session_state.page = 'landing' if not st.session_state.authenticated else 'home'
 if 'supabase_client' not in st.session_state:
     st.session_state.supabase_client = init_supabase()
 
 # --- MAIN APP ROUTING ---
 def main():
     if not st.session_state.authenticated:
-        view_auth()
+        if st.session_state.page == "auth":
+            view_auth()
+        else:
+            view_landing()
     else:
         page = st.session_state.page
         if page == "home":
