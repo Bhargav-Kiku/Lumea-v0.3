@@ -213,8 +213,7 @@ def view_chat():
                         emotion_label, emotion_score = analyze_emotion(transcript)
                         
                     # Check for self-harm risk
-                    negative_emotions = ["😢 Sadness", "😠 Anger", "😨 Fear", "🤢 Disgust"]
-                    if is_self_harm_risk(transcript) or (emotion_label in negative_emotions and emotion_score > 50.0):
+                    if is_self_harm_risk(transcript):
                         st.session_state.self_harm_warning_triggered = True
                       
                     user_msg = {
@@ -246,8 +245,7 @@ def view_chat():
         emotion_label, emotion_score = analyze_emotion(prompt)
         
         # Check for self-harm risk
-        negative_emotions = ["😢 Sadness", "😠 Anger", "😨 Fear", "🤢 Disgust"]
-        if is_self_harm_risk(prompt) or (emotion_label in negative_emotions and emotion_score > 50.0):
+        if is_self_harm_risk(prompt):
             st.session_state.self_harm_warning_triggered = True
       
         # 2. Append & Save DB User msg

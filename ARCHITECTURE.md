@@ -41,7 +41,8 @@ flowchart LR
     subgraph Processing_Layer [Processing & Analytics]
         direction TB
         App -->|2a. Validate Limit| RL[Rate Limiter]
-        App -->|2b. Analyze Text| HF[Hugging Face API]
+        App -->|2b. Check Safety| SF[Safety Utility]
+        App -->|2c. Analyze Text| HF[Hugging Face API]
         HF -->|3. Emotion Return| App
         App -->|4. Text + Context| Groq[Groq API]
         Groq -->|5. Stream Response Chunks| App
@@ -108,7 +109,10 @@ flowchart TD
 
 ### 💬 Chat Workflow Loop
 1. **Input**: User sends statement.
-2. **Analysis**: Prompt pushes triggers via `DistilRoBERTa` vectors classifying vectors explicitly (e.g., *Sadness 85%*).
-3. **Condition Injection**: Static frames append `[System context: Expressing Sadness]` to Groq queue buffers.
-4. **Rendering**: Message streams real-time in Streamlit session nodes triggers while Edge audio executes implicitly.
-5. **Datalake Sync**: Context pushes asyncronously inside `chat_history` SQL buffers.
+2. **Safety Check**: Immediate interrupt verifies input against `utils/safety.py` imminent self-harm phrasing bounds matching.
+3. **Analysis**: Prompt pushes triggers via `DistilRoBERTa` vectors classifying buffers explicitly (e.g., *Sadness 85%*).
+4. **Condition Injection**: Static frames append emotional buffers to Groq headers elegantly.
+5. **Rendering / Alerting**: 
+    - **Safe pass**: Message streams real-time with ambient AI routing.
+    - **Trigger pass**: Dialogue holds/suppresses response streams and forces injection of accessible localized support cards to emergency Indian Helplines.
+6. **Datalake Sync**: Context pushes into `chat_history` SQL buffers consistently.

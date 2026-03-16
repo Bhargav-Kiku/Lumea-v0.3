@@ -46,6 +46,11 @@ This ensures AI tone mirrors exact emotional waves authentically without hard-se
 To ensure lightweight buffer compliance thresholds, rate limiters reset daily inside absolute local stream checkpoints:
 - **Baseline Algorithm**: Increments message counters on successful loads up to **100 loops per 24 hours**. Checkpoint verifies absolute dates flips before overriding safety thresholds securely.
 
+### 4. Self-Harm Mitigation & Response Interruption
+To guarantee user safety, explicit phrasing related to self-harm triggers local interception flows **before** executing AI responses:
+- **Safety Checker**: Utilizing strict substring matching (`is_self_harm_risk` from `utils/safety.py`), user statements are scanned for imminent triggers.
+- **Support Intervention**: If risk is detected, Lumea suppresses generation of AI dialogue and forces visual injection of styled UI cards carrying emergency fallback routing to localized Indian helplines (**Vandrevala Foundation**, **AASRA**, & **Kiran**) that operate 24x7.
+
 ---
 
 ## 🗄️ Database Architecture (Supabase API)
