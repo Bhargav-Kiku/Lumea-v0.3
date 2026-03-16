@@ -39,9 +39,9 @@ flowchart LR
     User([User]) -->|1. Message / Mood| App[Streamlit App]
     
     subgraph Processing_Layer [Processing & Analytics]
-        Direction TB
+        direction TB
         App -->|2a. Validate Limit| RL[Rate Limiter]
-        App -->|2b. Analayze Text| HF[Hugging Face API]
+        App -->|2b. Analyze Text| HF[Hugging Face API]
         HF -->|3. Emotion Return| App
         App -->|4. Text + Context| Groq[Groq API]
         Groq -->|5. Stream Response Chunks| App
@@ -68,7 +68,7 @@ flowchart TD
         CSS[Floating dark/light Theme CSS]
     end
 
-    subgraph Application_Layer [Application Layer (Streamlit)]
+    subgraph Application_Layer ["Application Layer (Streamlit)"]
         direction TB
         Router[Router App.py]
         Views[Views / Subpages]
@@ -86,7 +86,7 @@ flowchart TD
         TTS_API[Edge-TTS Node]
     end
 
-    subgraph Database_Layer [Database Layer (Supabase)]
+    subgraph Database_Layer ["Database Layer (Supabase)"]
         Auth[Supabase Auth Services]
         Table_Profiles[(Profiles)]
         Table_Moods[(Mood_Entries)]
