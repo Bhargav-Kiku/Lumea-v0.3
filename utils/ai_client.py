@@ -167,4 +167,42 @@ def transcribe_audio_groq(audio_bytes: bytes, filename: str = "input.wav"):
     except Exception as e:
         print(f"Groq Transcription Error: {e}")
         return None
+        
+def get_journal_reflection(content: str) -> str:
+    """
+    Generates a supportive 1-2 sentence AI reflection for a journal entry.
+    """
+    if not content or not content.strip():
+        return ""
+        
+    import os
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
+    if not groq_api_key or groq_api_key == "your_groq_api_key_here":
+        return "*(AI disconnected)*"
+        
+    try:
+        from groq import Groq
+        client = Groq(api_key=groq_api_key)
+        
+        system_prompt = (
+            "You are Lumea, an empathetic AI mental health companion. "
+            "Read the user's journal entry below and provide a warm, compassionate, and validating "
+            "1 to 2 sentence reflection. Do not offer unsolicited advice or diagnose. Just validate feelings."
+        )
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Journal Entry:\n{content}"}
+            ],
+            temperature=0.7,
+            max_tokens=150
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"*(Could not reflect: {str(e)})*"
 

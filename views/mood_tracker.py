@@ -185,6 +185,47 @@ def view_mood_tracker():
             # Display Dashboard Style Graph in a container
             with st.container(border=True):
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                
+            # --- Tag Insights ---
+            df_tags = df.copy()
+            df_tags['tags'] = df_tags['tags'].fillna('')
+            # Explode tags if multiple separated by comma
+            df_tags['tag_list'] = df_tags['tags'].apply(lambda x: [t.strip().lower() for t in x.split(',') if t.strip()])
+            df_exploded = df_tags.explode('tag_list')
+            df_exploded = df_exploded[df_exploded['tag_list'] != '']
+            
+            if not df_exploded.empty and len(df_exploded) > 0:
+                tag_mood = df_exploded.groupby('tag_list')['mood'].mean().reset_index()
+                fig_tag = px.bar(
+                    tag_mood, 
+                    x="tag_list", 
+                    y="mood",
+                    labels={"tag_list": "Activities / Tags", "mood": "Average Mood"},
+                    color_discrete_sequence=["#8b5cf6"],
+                    text_auto='.1f'
+                )
+                fig_tag.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font_color=text_color,
+                    xaxis=dict(showgrid=False, title=None),
+                    yaxis=dict(
+                        showgrid=True, 
+                        gridcolor=grid_c, 
+                        range=[0.7, 5.3],
+                        dtick=1,
+                        tickmode='array',
+                        tickvals=[1, 2, 3, 4, 5],
+                        ticktext=['😢', '😔', '😐', '😊', '😄']
+                    ),
+                    margin=dict(l=40, r=20, t=10, b=40),
+                    height=240
+                )
+                fig_tag.update_traces(textfont_size=10, textposition="outside", cliponaxis=False)
+                
+                st.markdown(f"<p style='color: {text_color}; font-size: 0.9rem; font-weight: 500; margin-top: 1rem; margin-bottom: 0.5rem;'>🎯 Insights by Activity</p>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.plotly_chart(fig_tag, use_container_width=True, config={'displayModeBar': False})
             
             # Recent Entries Mini-List
             st.markdown(f"<h4 style='color: {text_color}; margin-bottom: 0.8rem;'>Recent Moments</h4>", unsafe_allow_html=True)

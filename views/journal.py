@@ -1,5 +1,6 @@
 import streamlit as st
 from components.sidebar import sidebar_nav
+from utils.ai_client import get_journal_reflection
 
 def view_journal():
     """Beautiful Journal view"""
@@ -72,6 +73,21 @@ def view_journal():
                 c = entry.get('content', '')
                 
                 with st.expander(f"**{t}** — {date_str}"):
-                    st.markdown(f"<div style='color:#cbd5e1; line-height: 1.6;'>{c}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color:#cbd5e1; line-height: 1.6; margin-bottom: 0.8rem;'>{c}</div>", unsafe_allow_html=True)
+                    
+                    # AI Reflection with State Persistence
+                    entry_id = entry.get('id', date_str)
+                    ref_key = f"ai_reflection_{entry_id}"
+                    
+                    if st.button("🤖 AI Reflection", key=f"btn_{entry_id}", use_container_width=True):
+                        with st.spinner("Generating reflection..."):
+                            st.session_state[ref_key] = get_journal_reflection(c)
+                    
+                    if ref_key in st.session_state:
+                         st.markdown(f"""
+                         <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 8px; padding: 0.8rem; margin-top: 0.5rem;">
+                             <span style="font-style: italic; color: #d8b4fe; font-size: 0.9rem;">✨ {st.session_state[ref_key]}</span>
+                         </div>
+                         """, unsafe_allow_html=True)
         else:
             st.info("Your journal is currently empty. Your first entry awaits!")

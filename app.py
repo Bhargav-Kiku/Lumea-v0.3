@@ -10,6 +10,7 @@ from views.chat import view_chat
 from views.mood_tracker import view_mood_tracker
 from views.journal import view_journal
 from views.landing import view_landing
+from views.breathing import view_breathing
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -102,6 +103,8 @@ def main():
             view_mood_tracker()
         elif page == "journal":
             view_journal()
+        elif page == "breathing":
+            view_breathing()
         else:
             view_dashboard()
 

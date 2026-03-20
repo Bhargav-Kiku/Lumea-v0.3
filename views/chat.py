@@ -53,12 +53,53 @@ def view_chat():
         init_chat_state()
         st.session_state.last_checked_session_id = st.session_state.get("current_chat_session_id")
     
-    st.markdown("""
-    <div class="animate-fade-in" style="margin-bottom: 2rem;">
-        <h2>💬 Chat with <span class="text-gradient">Lumea</span></h2>
-        <p style="color: #94a3b8;">I'm here to listen and support you. Take your time, and share what's on your mind.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    c_head1, c_head2 = st.columns([7.5, 2.5])
+    
+    with c_head1:
+        st.markdown(f"""
+        <div class="animate-fade-in" style="margin-bottom: 1rem;">
+            <h2>💬 Chat with <span class="text-gradient">Lumea</span></h2>
+            <p style="color: #94a3b8;">I'm here to listen and support you. Take your time, and share what's on your mind.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with c_head2:
+        # --- Session Sentiment Density (Donut Chart) ---
+        user_messages = [m for m in st.session_state.chat_history if m["role"] == "user"]
+        all_emotions = [m.get("emotion") for m in user_messages if m.get("emotion") and not m.get("emotion").startswith(("⚠️", "⏳", "❌"))]
+        
+        if all_emotions:
+            import collections
+            import plotly.graph_objects as go
+            
+            # Count ignoring emojis if needed, but keeping them looks nice
+            counts = collections.Counter(all_emotions)
+            labels = list(counts.keys())
+            values = list(counts.values())
+            
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=labels, 
+                values=values, 
+                hole=.6,
+                marker=dict(colors=["#a855f7", "#ec4899", "#3b82f6", "#10b981", "#f59e0b"]),
+                textinfo='none'
+            )])
+            fig_pie.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                showlegend=True,
+                legend=dict(
+                    orientation="h", 
+                    yanchor="bottom", y=-0.4, 
+                    xanchor="center", x=0.5, 
+                    font=dict(size=9, color="#94a3b8")
+                ),
+                margin=dict(l=0, r=0, t=5, b=5),
+                height=110
+            )
+            with st.container(border=True):
+                st.markdown("<p style='font-size: 0.7rem; text-align: center; color: #94a3b8; margin-bottom: 0rem; font-weight: 500;'>Insights</p>", unsafe_allow_html=True)
+                st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
     
     # Safety Support Warning
     if st.session_state.get('self_harm_warning_triggered', False):

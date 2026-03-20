@@ -9,7 +9,21 @@ def view_dashboard():
     is_light = st.session_state.get('theme', 'dark') == 'light'
     muted = "#64748b" if is_light else "#94a3b8"
     
+    import random
+    AFFIRMATIONS = [
+        "Take a deep breath. You are doing great.",
+        "You are in a safe, quiet space now.",
+        "What is one small win you had today?",
+        "Be kind to your mind today.",
+        "Every day is a fresh beginning."
+    ]
+    quote = random.choice(AFFIRMATIONS)
+    
     st.markdown(f"""
+    <div style="background: rgba(168, 85, 247, 0.08); border: 1.1px solid rgba(168, 85, 247, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;" class="animate-fade-in">
+        <span style="font-style: italic; color: {"#a855f7" if is_light else "#d8b4fe"}; font-index: 0.95rem;">✨ {quote}</span>
+    </div>
+    
     <div class="animate-fade-in" style="margin-bottom: 3rem;">
         <h1 style="font-size: 2.5rem; font-weight: 300;">Good to see you, <span class="text-gradient" style="font-weight: 700;">{user_email.split('@')[0]}</span></h1>
         <p style="color: {muted}; font-size: 1.1rem;">What would you like to focus on today?</p>
