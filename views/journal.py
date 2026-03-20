@@ -14,6 +14,36 @@ def view_journal():
     </div>
     """, unsafe_allow_html=True)
     
+    is_dark = st.session_state.get('theme', 'dark') == 'dark'
+    text_color = "#f8fafc" if is_dark else "#1e293b"
+    muted = "#94a3b8" if is_dark else "#64748b"
+
+    # --- AI Weekly Reflection ---
+    from utils.journal_analyzer import get_weekly_journal_summary
+    user_id = getattr(st.session_state.user, 'id', 'guest')
+    
+    if supabase and user_id != 'guest':
+        with st.container(border=True):
+            c_wi1, c_wi2 = st.columns([7.5, 2.5])
+            with c_wi1:
+                st.markdown(f"<p style='color: {text_color}; font-size: 0.95rem; margin-top: 0.4rem; font-weight: 500;'>🧠 AI Weekly Reflection</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color: {muted}; font-size: 0.85rem; margin-bottom: 0;'>Summarize your last 7 days of journal entries for thematic themes insights.</p>", unsafe_allow_html=True)
+            with c_wi2:
+                if st.button("📊 Analyze Week", use_container_width=True, key="btn_week_analysis"):
+                    with st.spinner("Analyzing text..."):
+                        st.session_state.weekly_analysis = get_weekly_journal_summary(supabase, user_id)
+                        
+            if 'weekly_analysis' in st.session_state:
+                analysis_html = st.session_state.weekly_analysis.replace('\n', '<br>')
+                st.markdown(f"""
+                <hr style='border-color: rgba(168,85,247,0.15); margin: 0.8rem 0;'>
+                <div style="font-size: 0.9rem; color: {text_color}; line-height: 1.6;" class="animate-fade-in">
+                    {analysis_html}
+                </div>
+                """, unsafe_allow_html=True)
+                
+        st.markdown("<br>", unsafe_allow_html=True)
+    
     col1, col2 = st.columns([1.5, 1], gap="large")
     
     with col1:
