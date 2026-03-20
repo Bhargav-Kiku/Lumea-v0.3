@@ -87,6 +87,23 @@ def sidebar_nav():
         """
         st.markdown(progress_html, unsafe_allow_html=True)
         
+        st.markdown(f"<p style='color: {label_color}; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 1.5rem;'>Data Backup</p>", unsafe_allow_html=True)
+        
+        from utils.exporter import export_mood_data, export_journal_data
+        
+        if supabase and user and getattr(user, 'id', 'guest') != 'guest':
+            u_id = user.id
+            with st.expander("📥 Export History", expanded=False):
+                mood_csv = export_mood_data(supabase, u_id)
+                if mood_csv:
+                    st.download_button("📊 Mood Data (CSV)", data=mood_csv, file_name="lumea_mood_history.csv", mime="text/csv", use_container_width=True)
+                
+                journal_csv = export_journal_data(supabase, u_id)
+                if journal_csv:
+                    st.download_button("📓 Journals (CSV)", data=journal_csv, file_name="lumea_journal_history.csv", mime="text/csv", use_container_width=True)
+                    
+        st.markdown("<br>", unsafe_allow_html=True)
+
         if st.button("🚪 Sign Out", use_container_width=True, key="nav_signout"):
             supabase = st.session_state.get("supabase_client")
             if supabase:
