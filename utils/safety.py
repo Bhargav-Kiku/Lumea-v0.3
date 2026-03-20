@@ -17,7 +17,13 @@ SELF_HARM_KEYWORDS = [
     "jump off a bridge", "jumping off",
     "self harm",
     "no reason to live",
-    "tired of living", "done with life"
+    "tired of living", "done with life",
+    
+    # --- New Additions ---
+    "end it all", "go to sleep forever", "not wake up",
+    "take a bunch of pills", "can't go on anymore",
+    "make the pain stop", "everyone is better off without me", 
+    "want to disappear", "self injury", "swallow pills"
 ]
 
 # Indian Helplines constants
