@@ -20,10 +20,41 @@ def view_dashboard():
     quote = random.choice(AFFIRMATIONS)
     
     st.markdown(f"""
-    <div style="background: rgba(168, 85, 247, 0.08); border: 1.1px solid rgba(168, 85, 247, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;" class="animate-fade-in">
-        <span style="font-style: italic; color: {"#a855f7" if is_light else "#d8b4fe"}; font-index: 0.95rem;">✨ {quote}</span>
+    <div style="background: rgba(168, 85, 247, 0.08); border: 1.1px solid rgba(168, 85, 247, 0.2); border-radius: 12px; padding: 0.8rem; margin-bottom: 1rem; text-align: center;" class="animate-fade-in">
+        <span style="font-style: italic; color: {"#a855f7" if is_light else "#d8b4fe"}; font-size: 0.9rem;">✨ {quote}</span>
     </div>
+    """, unsafe_allow_html=True)
     
+    # --- Dynamic AI Affirmations ---
+    from utils.ai_client import get_dynamic_affirmation
+    supabase = st.session_state.get("supabase_client")
+    user_id = getattr(st.session_state.user, 'id', 'guest')
+    last_mood = "Neutral"
+    
+    if supabase and user_id != 'guest':
+        try:
+            response = supabase.table('mood_entries').select('mood').eq('user_id', user_id).order('created_at', desc=True).limit(1).execute()
+            if response.data:
+                mood_score = response.data[0]['mood']
+                mood_map = {1: "Very Bad", 2: "Bad", 3: "Neutral", 4: "Good", 5: "Very Good"}
+                last_mood = mood_map.get(mood_score, "Neutral")
+        except:
+            pass
+            
+    c_aff1, c_aff2, c_aff3 = st.columns([1, 1, 1])
+    with c_aff2:
+        if st.button("✨ Get Tailored Affirmation", use_container_width=True, key="btn_dyn_aff"):
+            with st.spinner("Connecting..."):
+                st.session_state.dyn_affirmation = get_dynamic_affirmation(last_mood)
+                
+    if 'dyn_affirmation' in st.session_state:
+        st.markdown(f"""
+        <div style="background: rgba(168, 85, 247, 0.12); border: 1px dashed rgba(168, 85, 247, 0.4); border-radius: 12px; padding: 1rem; margin-bottom: 2rem; text-align: center;" class="animate-fade-in">
+            <span style="font-weight: 500; color: {"#9333ea" if is_light else "#d8b4fe"}; font-size: 1rem;">🌟 {st.session_state.dyn_affirmation}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
     <div class="animate-fade-in" style="margin-bottom: 3rem;">
         <h1 style="font-size: 2.5rem; font-weight: 300;">Good to see you, <span class="text-gradient" style="font-weight: 700;">{user_email.split('@')[0]}</span></h1>
         <p style="color: {muted}; font-size: 1.1rem;">What would you like to focus on today?</p>
