@@ -11,6 +11,7 @@ from views.mood_tracker import view_mood_tracker
 from views.journal import view_journal
 from views.landing import view_landing
 from views.breathing import view_breathing
+from views.cbt_tool import view_cbt_tool
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -105,6 +106,8 @@ def main():
             view_journal()
         elif page == "breathing":
             view_breathing()
+        elif page == "cbt":
+            view_cbt_tool()
         else:
             view_dashboard()
 

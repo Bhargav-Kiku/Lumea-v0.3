@@ -29,7 +29,8 @@ def sidebar_nav():
             "chat": ("💬", "Chat Companion"),
             "mood": ("📊", "Mood Tracker"),
             "journal": ("📓", "Journal"),
-            "breathing": ("🌬️", "Breathing Exercise")
+            "breathing": ("🌬️", "Breathing Exercise"),
+            "cbt": ("🧩", "Mindset Reframe")
         }
         
         for key, (icon, label) in pages.items():
