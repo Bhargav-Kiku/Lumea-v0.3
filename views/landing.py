@@ -1,4 +1,5 @@
 import streamlit as st
+from components.styles import get_landing_css
 
 def view_landing():
     """Beautiful Landing Page for Lumea"""
@@ -37,36 +38,13 @@ def view_landing():
         }}
         """
         
-    style_injection += """
-    .firefly {
-        position: fixed;
-        border-radius: 50%;
-        background: #facc15;
-        box-shadow: 0 0 8px #facc15, 0 0 15px #eab308, 0 0 22px rgba(250, 204, 21, 0.4);
-        opacity: 0.5;
-        pointer-events: none;
-        z-index: 100; /* Floating visual layer but background behind most content overlays */
-    }
-    @keyframes twinkle {
-        0%, 100% { opacity: 0.15; transform: scale(0.8); }
-        50% { opacity: 0.7; transform: scale(1.1); }
-    }
-    </style>
-    """
+    style_injection += "</style>"
+    st.markdown(get_landing_css(), unsafe_allow_html=True)
     st.markdown(style_injection.strip(), unsafe_allow_html=True)
     st.markdown(firefly_html.strip(), unsafe_allow_html=True)
     
     # Hero Section
     st.markdown(f"""
-    <style>
-    /* Reduce Streamlit's default top padding only for this page/container */
-    div[data-testid="stVerticalBlock"] > div:first-child .block-container {{
-        padding-top: 1rem !important;
-    }}
-    .stApp header {{
-        height: 0px !important;
-    }}
-    </style>
     <div style="text-align: center; padding: 1rem 1rem 2rem 1rem;" class="animate-fade-in">
         <h1 style="font-size: 5rem; margin-bottom: 0rem;">🌙</h1>
         <h1 class="text-gradient" style="font-size: 4.5rem; margin-bottom: 0.5rem; line-height: 1.1;">Lumea</h1>
@@ -79,20 +57,7 @@ def view_landing():
     # Get Started Button (Centered)
     col1, col2, col3 = st.columns([1, 0.8, 1])
     with col2:
-        st.markdown("""
-        <style>
-        .stButton > button {
-            font-family: 'Outfit', sans-serif !important;
-            font-weight: 700 !important;
-            font-size: 1.2rem !important;
-            letter-spacing: 1.5px !important;
-            text-transform: uppercase !important;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
-            border-radius: 16px !important;
-            padding: 0.8rem 1.5rem !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+        pass
         
         if st.button("Get Started", use_container_width=True, key="get_started_btn"):
             st.session_state.page = "auth"

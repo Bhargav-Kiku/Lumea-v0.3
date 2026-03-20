@@ -26,7 +26,7 @@ def view_dashboard():
     """, unsafe_allow_html=True)
     
     # --- Dynamic AI Affirmations ---
-    from utils.ai_client import get_dynamic_affirmation
+    from utils.ai import get_dynamic_affirmation
     supabase = st.session_state.get("supabase_client")
     user_id = getattr(st.session_state.user, 'id', 'guest')
     last_mood = "Neutral"

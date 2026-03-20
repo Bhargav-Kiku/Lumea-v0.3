@@ -1,6 +1,6 @@
 import streamlit as st
 from components.sidebar import sidebar_nav
-from utils.ai_client import get_journal_reflection
+from utils.ai import get_journal_reflection
 
 def view_journal():
     """Beautiful Journal view"""
@@ -19,7 +19,7 @@ def view_journal():
     muted = "#94a3b8" if is_dark else "#64748b"
 
     # --- AI Weekly Reflection ---
-    from utils.journal_analyzer import get_weekly_journal_summary
+    from utils.ai import get_weekly_journal_summary
     user_id = getattr(st.session_state.user, 'id', 'guest')
     
     if supabase and user_id != 'guest':

@@ -1,6 +1,6 @@
 import streamlit as st
 from components.sidebar import sidebar_nav
-from utils.cbt_analyzer import analyze_cognitive_distortion
+from utils.ai import analyze_cognitive_distortion
 
 def view_cbt_tool():
     """CBT Thought Record Visual Tool"""

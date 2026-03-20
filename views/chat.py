@@ -2,7 +2,7 @@ import streamlit as st
 import time
 import base64
 from components.sidebar import sidebar_nav
-from utils.ai_client import analyze_emotion, get_groq_chat_stream, text_to_audio_bytes
+from utils.ai import analyze_emotion, get_groq_chat_stream, text_to_audio_bytes
 from utils.supabase_client import create_chat_session, get_session_messages, save_chat_message
 from utils.safety import is_self_harm_risk
 
@@ -205,7 +205,7 @@ def view_chat():
 
     # === Voice Input Toolbar ===
     from streamlit_mic_recorder import mic_recorder
-    from utils.ai_client import transcribe_audio_groq
+    from utils.ai import transcribe_audio_groq
     from utils.rate_limit import is_rate_limited, increment_message_count
 
     with st.container():
