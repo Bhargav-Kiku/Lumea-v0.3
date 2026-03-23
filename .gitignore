@@ -94,3 +94,6 @@ ipython_config.py
 
 # Streamlit
 .streamlit/
+
+# Reports
+Report/
