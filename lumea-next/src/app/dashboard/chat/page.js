@@ -16,6 +16,12 @@ export default function ChatPage() {
   const [isSelfHarmRisk, setIsSelfHarmRisk] = useState(false);
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  
+  // Session Tracking State
+  const [sessions, setSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -25,6 +31,61 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Fetch sessions on mount
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sessions:', error);
+    } else {
+      setSessions(data || []);
+    }
+  };
+
+  const loadSession = async (sessionId) => {
+    setLoading(true);
+    setIsHistoryOpen(false);
+    setCurrentSessionId(sessionId);
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error loading messages:', error);
+      setMessages([{ role: "assistant", content: "*(Sorry, I had trouble loading this conversation.)*" }]);
+    } else {
+      setMessages(data.map(m => ({
+        role: m.role,
+        content: m.content,
+        emotion: m.emotion,
+        score: m.score
+      })));
+    }
+    setLoading(false);
+  };
+
+  const startNewChat = () => {
+    setCurrentSessionId(null);
+    setMessages([
+      { role: "assistant", content: "Hi there. I'm Lumea, your mental health companion. How are you feeling today?" }
+    ]);
+    setIsHistoryOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,6 +120,26 @@ export default function ChatPage() {
     setMessages(newMessages);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      let sessionId = currentSessionId;
+
+      // Create session if it doesn't exist
+      if (!sessionId && user) {
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .insert({
+            user_id: user.id,
+            title: userMessage.length > 30 ? userMessage.substring(0, 30) + '...' : userMessage
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        sessionId = data.id;
+        setCurrentSessionId(sessionId);
+        setSessions(prev => [data, ...prev]);
+      }
+
       // 2. Analyze Emotion
       const emotionRes = await fetch('/api/emotion', {
         method: 'POST',
@@ -67,12 +148,28 @@ export default function ChatPage() {
       });
       const emotionData = await emotionRes.json();
       
+      let emotion = null;
+      let score = null;
+
       if (emotionData.emotion) {
-        setCurrentEmotion(emotionData.emotion);
+        emotion = emotionData.emotion;
+        score = emotionData.score;
+        setCurrentEmotion(emotion);
         // Append emotion tagging to the last user message
         setMessages(prev => prev.map((msg, idx) => 
-          idx === prev.length - 1 ? { ...msg, emotion: emotionData.emotion, score: emotionData.score } : msg
+          idx === prev.length - 1 ? { ...msg, emotion: emotion, score: score } : msg
         ));
+      }
+
+      // Save User Message to DB
+      if (sessionId) {
+        await supabase.from('chat_messages').insert({
+          session_id: sessionId,
+          role: 'user',
+          content: userMessage,
+          emotion: emotion,
+          score: score
+        });
       }
 
       // 3. Safety Check using the expanded 100+ phrases library
@@ -121,6 +218,15 @@ export default function ChatPage() {
         });
       }
 
+      // Save Assistant Message to DB
+      if (sessionId) {
+        await supabase.from('chat_messages').insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: aiResponseText
+        });
+      }
+
       // Browser TTS (Auto Read Reply)
       if (window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(aiResponseText);
@@ -156,11 +262,114 @@ export default function ChatPage() {
       <div className="neon-orb" style={{ width: '300px', height: '300px', background: '#3c4b9e', top: '-50px', left: '-100px', opacity: 0.1 }}></div>
       <div className="neon-orb" style={{ width: '300px', height: '300px', background: '#6366f1', bottom: '100px', right: '-100px', opacity: 0.08 }}></div>
 
+      {/* History Toggle Button */}
+      <button 
+        onClick={() => setIsHistoryOpen(true)}
+        style={{
+          position: 'absolute',
+          top: '1rem',
+          left: '1rem',
+          background: 'rgba(30, 41, 59, 0.4)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: '12px',
+          padding: '0.6rem 1rem',
+          color: '#818cf8',
+          cursor: 'pointer',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>history</span>
+        <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>History</span>
+      </button>
+
+      {/* History Sidebar Override/Drawer */}
+      {isHistoryOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '300px',
+          height: '100vh',
+          background: 'rgba(11, 13, 24, 0.95)',
+          backdropFilter: 'blur(40px)',
+          zIndex: 200,
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <h3 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: '800' }}>Journey History</h3>
+            <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <button 
+            onClick={startNewChat}
+            style={{
+              padding: '1rem',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)',
+              color: '#fff',
+              border: 'none',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span className="material-symbols-outlined">add</span> New Sanctuary
+          </button>
+
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {sessions.map(session => (
+              <button
+                key={session.id}
+                onClick={() => loadSession(session.id)}
+                style={{
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  background: currentSessionId === session.id ? 'rgba(129, 140, 248, 0.1)' : 'transparent',
+                  border: currentSessionId === session.id ? '1px solid rgba(129, 140, 248, 0.4)' : '1px solid transparent',
+                  color: currentSessionId === session.id ? '#818cf8' : '#94a3b8',
+                  textAlign: 'left',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem'
+                }}
+              >
+                <span style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{session.title}</span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>{new Date(session.created_at).toLocaleDateString()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="animate-fade-in" style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-0.025em', marginBottom: '0.4rem', color: '#f8fafc' }}>Celestial Sanctuary</h1>
         <p style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: '500', opacity: 0.8 }}>A safe space for your thoughts</p>
       </div>
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
 
       {/* Safety Warning Panel */}
       {isSelfHarmRisk && (
