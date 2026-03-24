@@ -15,6 +15,19 @@ export default function MoodPage() {
   const [recentEntries, setRecentEntries] = useState([]);
   const [hoveredEntry, setHoveredEntry] = useState(null);
   const [viewRange, setViewRange] = useState('monthly'); // 'monthly' or 'weekly'
+  const [todayEntry, setTodayEntry] = useState(null); // For Daily Reflection widget
+  const [showReflectionModal, setShowReflectionModal] = useState(false);
+
+  const dailyQuotes = [
+    '"The moon does not fight the darkness; it simply shines within it."',
+    '"Within you there is a stillness and sanctuary to which you can retreat at any time."',
+    '"You are the sky. Everything else is just the weather."',
+    '"Be gentle with yourself. You are a child of the universe."',
+    '"Peace is not the absence of storm, but calm in the midst of it."',
+    '"Every emotion is a wave — acknowledge it, then let it pass."',
+    '"Your feelings are valid. Your healing is real. Your growth is happening."',
+  ];
+  const todayQuote = dailyQuotes[new Date().getDay() % dailyQuotes.length];
 
   const moodOptions = [
     { value: 1, label: "Calm", icon: "flare", color: theme.colors.primary, glow: "rgba(186,195,255,0.4)" },
@@ -25,7 +38,34 @@ export default function MoodPage() {
 
   useEffect(() => {
     fetchRecentEntries();
+    fetchTodayEntry();
   }, [viewRange]);
+
+  const fetchTodayEntry = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', start.toISOString())
+        .lte('created_at', end.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      setTodayEntry(data?.[0] || null);
+    } catch (err) {
+      console.error("Error fetching today's entry:", err);
+    }
+  };
 
   const fetchRecentEntries = async () => {
     try {
@@ -230,7 +270,7 @@ export default function MoodPage() {
             <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.5' }}>You're building a beautiful pattern of self-awareness. Keep shining.</p>
           </div>
 
-          {/* Daily Reflection Mockup */}
+          {/* Daily Reflection Widget */}
           <div style={{ 
             background: 'rgba(30, 41, 59, 0.3)', 
             backdropFilter: 'blur(20px)', 
@@ -250,10 +290,72 @@ export default function MoodPage() {
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', height: '100%', justifyContent: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', color: '#f1e7ff' }}>auto_awesome</span>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f8fafc' }}>Daily Reflection</h3>
-              <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#d6c9ee', lineHeight: '1.6' }}>"The moon does not fight the darkness; it simply shines within it."</p>
-              <button style={{ background: 'none', border: 'none', color: '#bac3ff', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem' }}>Read More</button>
+
+              {todayEntry ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '1.4rem', color: moodOptions.find(o => o.value === todayEntry.mood)?.color || '#bac3ff' }}>
+                      {moodOptions.find(o => o.value === todayEntry.mood)?.icon || 'flare'}
+                    </span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: moodOptions.find(o => o.value === todayEntry.mood)?.color || '#bac3ff' }}>
+                      Feeling {moodOptions.find(o => o.value === todayEntry.mood)?.label || 'Unknown'} today
+                    </span>
+                  </div>
+                  {todayEntry.note && (
+                    <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: '#d6c9ee', lineHeight: '1.6', maxHeight: '80px', overflow: 'hidden' }}>
+                      "{todayEntry.note}"
+                    </p>
+                  )}
+                  <button 
+                    onClick={() => setShowReflectionModal(true)}
+                    style={{ background: 'none', border: '1px solid rgba(186,195,255,0.3)', borderRadius: '20px', color: '#bac3ff', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
+                  >View Full Entry</button>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#d6c9ee', lineHeight: '1.6' }}>{todayQuote}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b' }}>No entry recorded yet today.</p>
+                  <button 
+                    onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
+                    style={{ background: 'none', border: '1px solid rgba(186,195,255,0.3)', borderRadius: '20px', color: '#bac3ff', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
+                  >Record Now ↑</button>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Full Today Entry Modal */}
+          {showReflectionModal && todayEntry && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(20px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', animation: 'tooltipPop 0.3s ease-out' }} onClick={() => setShowReflectionModal(false)}>
+              <GlassCard style={{ maxWidth: '500px', width: '100%', padding: '3rem', position: 'relative', cursor: 'default' }} onClick={e => e.stopPropagation()}>
+                <button onClick={() => setShowReflectionModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.2em', color: theme.colors.primary, fontWeight: '700' }}>Today's Reflection</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+                  <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: `radial-gradient(circle, ${moodOptions.find(o => o.value === todayEntry.mood)?.glow || 'rgba(186,195,255,0.4)'} 0%, transparent 70%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: moodOptions.find(o => o.value === todayEntry.mood)?.color }}>
+                      {moodOptions.find(o => o.value === todayEntry.mood)?.icon}
+                    </span>
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#f8fafc', margin: 0 }}>Feeling {moodOptions.find(o => o.value === todayEntry.mood)?.label}</h2>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(todayEntry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+                {todayEntry.note && (
+                  <p style={{ color: '#e2e8f0', fontSize: '1.1rem', lineHeight: '1.8', fontStyle: 'italic' }}>"{todayEntry.note}"</p>
+                )}
+                {todayEntry.tags && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                    {todayEntry.tags.split(',').map((tag, i) => (
+                      <span key={i} style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '0.3rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '600', border: '1px solid rgba(129, 140, 248, 0.2)' }}>#{tag.trim()}</span>
+                    ))}
+                  </div>
+                )}
+              </GlassCard>
+            </div>
+          )}
 
         </div>
       </div>
