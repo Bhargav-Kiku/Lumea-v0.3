@@ -41,7 +41,8 @@ export default function Sidebar({ onOpenContact }) {
     { title: "Mood Tracker", href: "/dashboard/mood", icon: "wb_twilight" },
     { title: "Journal", href: "/dashboard/journal", icon: "auto_stories" },
     { title: "Breathing Exercise", href: "/dashboard/breathing", icon: "bedtime" },
-    { title: "Mindset Reframe", href: "/dashboard/cbt", icon: "psychology" }
+    { title: "Mindset Reframe", href: "/dashboard/cbt", icon: "psychology" },
+    { title: "Playground", href: "/dashboard/playground", icon: "auto_awesome" },
   ];
 
   const handleSignOut = async () => {
