@@ -10,21 +10,66 @@ import GlassCard from '@/components/GlassCard';
 export default function DashboardPage() {
   const [greeting, setGreeting] = useState('Good evening');
   const [name, setName] = useState('Friend');
+  const [moodEntries, setMoodEntries] = useState([]);
+  const [recentJournal, setRecentJournal] = useState(null);
+  const [aiInsight, setAiInsight] = useState('');
+  const [insightLoading, setInsightLoading] = useState(true);
   const router = useRouter();
+
+  const moodOptions = [
+    { value: 1, label: 'Calm',    color: '#bac3ff', glow: 'rgba(186,195,255,0.5)' },
+    { value: 2, label: 'Joyful',  color: '#f1e7ff', glow: 'rgba(241,231,255,0.5)' },
+    { value: 3, label: 'Anxious', color: '#818cf8', glow: 'rgba(129,140,248,0.5)' },
+    { value: 4, label: 'Sad',     color: '#7dd3fc', glow: 'rgba(125,211,252,0.5)' },
+  ];
+
+  // Deterministic positions for up to 10 stars
+  const posPresets = [
+    { x: '20%', y: '25%' }, { x: '70%', y: '18%' }, { x: '45%', y: '75%' },
+    { x: '80%', y: '60%' }, { x: '15%', y: '65%' }, { x: '55%', y: '35%' },
+    { x: '35%', y: '50%' }, { x: '88%', y: '30%' }, { x: '10%', y: '45%' }, { x: '65%', y: '80%' },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
-      // 1. Get Greeting based on time
       const hour = new Date().getHours();
       if (hour < 12) setGreeting('Good morning');
       else if (hour < 17) setGreeting('Good afternoon');
       else setGreeting('Good evening');
 
-      // 2. Get User Name from Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const displayName = user.user_metadata?.user_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend';
         setName(displayName);
+
+        // Fetch last 7 mood entries
+        const { data: moods } = await supabase
+          .from('mood_entries').select('*').eq('user_id', user.id)
+          .order('created_at', { ascending: false }).limit(7);
+        const entries = moods || [];
+        setMoodEntries(entries);
+
+        // Fetch latest journal entry
+        const { data: journals } = await supabase
+          .from('journal_entries').select('*').eq('user_id', user.id)
+          .order('created_at', { ascending: false }).limit(1);
+        setRecentJournal(journals?.[0] || null);
+
+        // Fetch AI insight
+        if (entries.length > 0) {
+          try {
+            const res = await fetch('/api/mood-insight', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entries })
+            });
+            const json = await res.json();
+            setAiInsight(json.insight || '');
+          } catch { setAiInsight('Your stars are aligning beautifully.'); }
+        } else {
+          setAiInsight('Start tracking your mood to reveal your emotional constellations.');
+        }
+        setInsightLoading(false);
       }
     };
     fetchData();
@@ -112,54 +157,96 @@ export default function DashboardPage() {
 
       {/* 3. Bento Grid for Summaries */}
       <section className="bento-grid" style={{ marginBottom: '4rem' }}>
-        {/* Mood Summary / Galaxy Mini (7 Col) */}
+        {/* Mood Summary / Galaxy Mini */}
         <div className="bento-7">
           <GlassCard style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: theme.colors.foreground, marginBottom: '0.2rem' }}>Mood Galaxy</h3>
-                <p style={{ color: theme.colors.muted, fontSize: '0.9rem' }}>Your emotional orbit is stable.</p>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: theme.colors.foreground, marginBottom: '0.25rem' }}>Mood Galaxy</h3>
+                <p style={{ color: theme.colors.muted, fontSize: '0.85rem' }}>
+                  {insightLoading ? 'Analyzing your emotional orbit...' : aiInsight}
+                </p>
               </div>
               <span style={{ fontSize: '1.5rem', color: theme.colors.accent, opacity: 0.6 }}>🪐</span>
             </div>
 
-            {/* Miniature Galaxy Visualization */}
-            <div style={{ height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <div className="animate-pulse" style={{ width: '180px', height: '180px', border: `1px solid ${theme.colors.primaryContainer}`, borderRadius: '50%', opacity: 0.1, position: 'absolute' }}></div>
-              <div style={{ width: '120px', height: '120px', border: `1px solid ${theme.colors.accent}`, borderRadius: '50%', opacity: 0.15, position: 'absolute' }}></div>
-              
-              {/* Orbiting Orbs */}
-              <div style={{ width: '16px', height: '16px', background: theme.colors.secondary, borderRadius: '50%', position: 'absolute', top: '20px', left: '40px', boxShadow: `0 0 15px ${theme.colors.secondary}` }}></div>
-              <div style={{ width: '12px', height: '12px', background: theme.colors.accent, borderRadius: '50%', position: 'absolute', bottom: '40px', right: '50px', boxShadow: `0 0 12px ${theme.colors.accent}` }}></div>
-              <div style={{ width: '8px', height: '8px', background: theme.colors.primary, borderRadius: '50%', position: 'absolute', top: '120px', right: '20px' }}></div>
-              
-              {/* Center Self */}
-              <div style={{ width: '40px', height: '40px', background: `linear-gradient(135deg, ${theme.colors.secondary} 0%, ${theme.colors.accent} 100%)`, borderRadius: '50%', boxShadow: `0 0 30px ${theme.colors.secondary}` }}></div>
+            {/* Live Mini Star Gallery */}
+            <div style={{ height: '200px', position: 'relative', borderRadius: '16px', background: 'rgba(2,6,23,0.4)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.03)' }}>
+              {/* Ambient glow */}
+              <div style={{ position: 'absolute', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(186,195,255,0.04)', filter: 'blur(60px)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
+
+              {moodEntries.length === 0 ? (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <p style={{ color: '#475569', fontSize: '0.85rem', fontStyle: 'italic' }}>Record a mood to ignite your galaxy</p>
+                </div>
+              ) : (
+                moodEntries.map((entry, idx) => {
+                  const opt = moodOptions.find(o => o.value === entry.mood) || moodOptions[0];
+                  const pos = posPresets[idx % posPresets.length];
+                  const size = 10 + (5 - entry.mood) * 2;
+                  return (
+                    <div key={idx} style={{
+                      position: 'absolute', left: pos.x, top: pos.y,
+                      transform: 'translate(-50%,-50%)',
+                      width: `${size}px`, height: `${size}px`,
+                      borderRadius: '50%',
+                      background: opt.color,
+                      boxShadow: `0 0 ${size * 2}px ${size}px ${opt.glow}`,
+                      opacity: 0.85
+                    }} />
+                  );
+                })
+              )}
+
+              {/* Connect nearby stars */}
+              {moodEntries.length > 1 && (
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.15 }}>
+                  {moodEntries.slice(0, 5).map((_, i) => {
+                    if (i === 0) return null;
+                    const a = posPresets[i - 1]; const b = posPresets[i];
+                    return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#bac3ff" strokeWidth="0.8" />;
+                  })}
+                </svg>
+              )}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2rem' }}>
-              {['Stable', 'Reflective', 'Peaceful'].map((tag) => (
-                <span key={tag} style={{ padding: '0.4rem 0.8rem', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '20px', fontSize: '0.75rem', color: theme.colors.muted }}>{tag}</span>
-              ))}
-            </div>
+            {/* Real mood tags from entries */}
+            {moodEntries.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                {[...new Set(moodEntries.map(e => moodOptions.find(o => o.value === e.mood)?.label).filter(Boolean))].map(label => (
+                  <span key={label} style={{ padding: '0.3rem 0.8rem', background: 'rgba(30,41,59,0.6)', borderRadius: '20px', fontSize: '0.7rem', color: theme.colors.muted }}>{label}</span>
+                ))}
+              </div>
+            )}
           </GlassCard>
         </div>
 
-        {/* Recent Reflection (5 Col) */}
+        {/* Recent Journal Reflection */}
         <div className="bento-5">
           <GlassCard style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
                 <span className="material-symbols-outlined" style={{ color: theme.colors.accent }}>menu_book</span>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: theme.colors.foreground, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Reflection</h3>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: theme.colors.foreground }}>Recent Reflection</h3>
               </div>
-              <span style={{ fontSize: '0.7rem', color: theme.colors.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Today, 2:40 PM</span>
-              <p style={{ fontSize: '1.1rem', fontStyle: 'italic', lineHeight: '1.6', color: theme.colors.onSurfaceVariant, marginTop: '0.8rem' }}>
-                "The twilight brought a sense of clarity I haven't felt all week. Watching the stars emerge reminded me that even in darkness, there is guidance..."
-              </p>
+              {recentJournal ? (
+                <>
+                  <span style={{ fontSize: '0.7rem', color: theme.colors.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    {new Date(recentJournal.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </span>
+                  {recentJournal.title && (
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700', color: theme.colors.foreground, marginTop: '0.5rem', marginBottom: '0.5rem' }}>{recentJournal.title}</h4>
+                  )}
+                  <p style={{ fontSize: '1rem', fontStyle: 'italic', lineHeight: '1.6', color: theme.colors.onSurfaceVariant, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    "{recentJournal.content}"
+                  </p>
+                </>
+              ) : (
+                <p style={{ fontSize: '1rem', fontStyle: 'italic', color: '#475569', lineHeight: '1.6' }}>No reflections yet. Begin writing to fill your celestial archive.</p>
+              )}
             </div>
-            <button onClick={() => router.push('/dashboard/journal')} style={{ background: 'none', border: 'none', color: theme.colors.primary, fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', alignSelf: 'flex-start', marginTop: '2rem' }}>
-              Continue Writing <span>➔</span>
+            <button onClick={() => router.push('/dashboard/journal')} style={{ background: 'none', border: 'none', color: theme.colors.primary, fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', alignSelf: 'flex-start', marginTop: '1.5rem' }}>
+              {recentJournal ? 'Continue Writing' : 'Start Writing'} <span>➔</span>
             </button>
           </GlassCard>
         </div>

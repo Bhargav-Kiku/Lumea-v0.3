@@ -33,7 +33,13 @@ export default function PlaygroundPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [editingStar, setEditingStar] = useState(null);
   const [labelInput, setLabelInput] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const stored = localStorage.getItem('playground_elapsed');
+    return stored ? parseInt(stored, 10) : 0;
+  });
   const [showGuide, setShowGuide] = useState(true);
+
   const animFrameRef = useRef(null);
   const trailsRef = useRef([]);
   const canvasDims = useRef({ w: 800, h: 500 }); // updated via ResizeObserver
@@ -49,10 +55,22 @@ export default function PlaygroundPage() {
     return () => ro.disconnect();
   }, []);
 
-  // Dim guide after a few seconds
+  // Dim guide after 5s
   useEffect(() => {
     const t = setTimeout(() => setShowGuide(false), 5000);
     return () => clearTimeout(t);
+  }, []);
+
+  // Persistent session timer — counts up every second and saves to localStorage
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsedSeconds(prev => {
+        const next = prev + 1;
+        localStorage.setItem('playground_elapsed', next.toString());
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
   }, []);
 
   // Float + boundary bounce animation
@@ -153,6 +171,26 @@ export default function PlaygroundPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          {/* Session timer */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.15rem' }}>
+            <span style={{ fontSize: '0.6rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700' }}>Time in Playground</span>
+            <span style={{
+              fontSize: '1.2rem', fontWeight: '800', letterSpacing: '0.05em',
+              color: '#bac3ff',
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              {String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0')}:{String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0')}:{String(elapsedSeconds % 60).padStart(2, '0')}
+            </span>
+            <button
+              onClick={() => { setElapsedSeconds(0); localStorage.setItem('playground_elapsed', '0'); }}
+              style={{ background: 'none', border: 'none', color: '#475569', fontSize: '0.65rem', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+            >
+              reset
+            </button>
+          </div>
+
+          <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.06)' }} />
+
           <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{stars.length} stars</span>
           <button onClick={clearAll} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '20px', padding: '0.5rem 1.2rem', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>
             Clear All
