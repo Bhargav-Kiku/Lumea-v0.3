@@ -15,8 +15,9 @@ export default function MoodPage() {
   const [recentEntries, setRecentEntries] = useState([]);
   const [hoveredEntry, setHoveredEntry] = useState(null);
   const [viewRange, setViewRange] = useState('monthly'); // 'monthly' or 'weekly'
-  const [todayEntry, setTodayEntry] = useState(null); // For Daily Reflection widget
+  const [todayEntry, setTodayEntry] = useState(null);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   const dailyQuotes = [
     '"The moon does not fight the darkness; it simply shines within it."',
@@ -39,7 +40,46 @@ export default function MoodPage() {
   useEffect(() => {
     fetchRecentEntries();
     fetchTodayEntry();
+    fetchStreak();
   }, [viewRange]);
+
+  const fetchStreak = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch last 60 entries (enough to cover any realistic streak)
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(60);
+
+      if (error || !data) return;
+
+      // Build a set of unique logged dates (YYYY-MM-DD)
+      const loggedDays = new Set(
+        data.map(e => new Date(e.created_at).toLocaleDateString('en-CA'))
+      );
+
+      // Count consecutive days backwards from today
+      let count = 0;
+      const cursor = new Date();
+      while (true) {
+        const dateStr = cursor.toLocaleDateString('en-CA');
+        if (loggedDays.has(dateStr)) {
+          count++;
+          cursor.setDate(cursor.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      setStreak(count);
+    } catch (err) {
+      console.error("Error calculating streak:", err);
+    }
+  };
 
   const fetchTodayEntry = async () => {
     try {
@@ -264,10 +304,15 @@ export default function MoodPage() {
           }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc', marginBottom: '1rem' }}>Luminous Streak</h3>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '4rem', fontWeight: '800', color: '#bac3ff', lineHeight: 0.9 }}>12</span>
-              <span style={{ fontSize: '1rem', fontWeight: '500', color: '#94a3b8', paddingBottom: '0.4rem' }}>days of mindful tracking</span>
+              <span style={{ fontSize: '4rem', fontWeight: '800', color: '#bac3ff', lineHeight: 0.9 }}>{streak}</span>
+              <span style={{ fontSize: '1rem', fontWeight: '500', color: '#94a3b8', paddingBottom: '0.4rem' }}>day{streak !== 1 ? 's' : ''} of mindful tracking</span>
             </div>
-            <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.5' }}>You're building a beautiful pattern of self-awareness. Keep shining.</p>
+            <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.5' }}>
+              {streak >= 7 ? "Incredible consistency. Your inner universe is expanding." :
+               streak >= 3 ? "You're building a beautiful pattern of self-awareness. Keep shining." :
+               streak === 1 ? "A journey of a thousand stars begins with one. Well done." :
+               "Start today \u2014 every entry lights a new star."}
+            </p>
           </div>
 
           {/* Daily Reflection Widget */}
