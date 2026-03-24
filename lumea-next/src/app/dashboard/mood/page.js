@@ -13,6 +13,7 @@ export default function MoodPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [recentEntries, setRecentEntries] = useState([]);
+  const [hoveredEntry, setHoveredEntry] = useState(null);
 
   const moodOptions = [
     { value: 1, label: "Calm", icon: "flare", color: theme.colors.primary, glow: "rgba(186,195,255,0.4)" },
@@ -299,14 +300,102 @@ export default function MoodPage() {
                 const left = `${posX[idx % posX.length]}%`;
                 const top = `${posY[idx % posY.length]}%`;
                 return (
-                  <div key={idx} style={{ position: 'absolute', left, top, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', transform: 'translate(-50%, -50%)' }}>
+                  <div 
+                    key={idx} 
+                    onMouseEnter={() => setHoveredEntry(entry)}
+                    onMouseLeave={() => setHoveredEntry(null)}
+                    style={{ 
+                      position: 'absolute', 
+                      left, 
+                      top, 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      gap: '0.5rem', 
+                      transform: 'translate(-50%, -50%)',
+                      cursor: 'pointer',
+                      zIndex: hoveredEntry === entry ? 10 : 2
+                    }}
+                  >
                     <div style={{
-                      width: '16px', height: '16px', borderRadius: '50%', background: opt.color,
-                      boxShadow: `0 0 25px 8px ${opt.glow}`, opacity: 0.85
+                      width: hoveredEntry === entry ? '24px' : '16px', 
+                      height: hoveredEntry === entry ? '24px' : '16px', 
+                      borderRadius: '50%', 
+                      background: opt.color,
+                      boxShadow: `0 0 ${hoveredEntry === entry ? '40px 15px' : '25px 8px'} ${opt.glow}`, 
+                      opacity: 0.85,
+                      transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                     }}></div>
-                    <span style={{ fontSize: '0.7rem', color: '#bac3ff', background: 'rgba(0,0,0,0.4)', padding: '0.2rem 0.5rem', borderRadius: '6px', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ 
+                      fontSize: '0.7rem', 
+                      color: '#bac3ff', 
+                      background: 'rgba(0,0,0,0.4)', 
+                      padding: '0.2rem 0.5rem', 
+                      borderRadius: '6px', 
+                      backdropFilter: 'blur(10px)', 
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      opacity: hoveredEntry === entry ? 0 : 1, // Hide date when tooltip shown
+                      transition: 'opacity 0.2s'
+                    }}>
                       {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
+
+                    {/* Highly Stylized Tooltip Popup */}
+                    {hoveredEntry === entry && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '2.5rem',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '240px',
+                        background: 'rgba(11, 13, 24, 0.9)',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '20px',
+                        padding: '1.2rem',
+                        border: `1px solid ${opt.color}44`,
+                        boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${opt.glow}22`,
+                        zIndex: 100,
+                        animation: 'tooltipPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        pointerEvents: 'none'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', color: opt.color }}>{opt.icon}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: opt.color, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{opt.label}</span>
+                          </div>
+                          <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                            {new Date(entry.created_at).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                        
+                        <p style={{ fontSize: '0.9rem', color: '#f1f5f9', lineHeight: '1.5', margin: 0, fontStyle: entry.note ? 'normal' : 'italic' }}>
+                          {entry.note ? `"${entry.note}"` : "No reflection recorded for this star."}
+                        </p>
+                        
+                        {entry.tags && (
+                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                            {entry.tags.split(',').map((tag, tIdx) => (
+                              <span key={tIdx} style={{ fontSize: '0.6rem', color: '#818cf8', background: 'rgba(129, 140, 248, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '10px', border: '1px solid rgba(129, 140, 248, 0.2)' }}>
+                                #{tag.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Triangle Tip */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '-8px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 0,
+                          height: 0,
+                          borderLeft: '8px solid transparent',
+                          borderRight: '8px solid transparent',
+                          borderTop: `8px solid rgba(11, 13, 24, 0.9)`
+                        }}></div>
+                      </div>
+                    )}
                   </div>
                 )
               })
@@ -340,6 +429,13 @@ export default function MoodPage() {
 
         </div>
       </section>
+
+      <style jsx="true">{`
+        @keyframes tooltipPop {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.9); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+      `}</style>
 
     </div>
   );
