@@ -1,5 +1,6 @@
 import "./globals.css";
 import SkyBackground from "@/components/SkyBackground";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: "Lumea - AI Mental Health Companion",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
       <body>
         <SkyBackground />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
