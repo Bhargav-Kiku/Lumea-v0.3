@@ -14,6 +14,7 @@ export default function MoodPage() {
   const [message, setMessage] = useState('');
   const [recentEntries, setRecentEntries] = useState([]);
   const [hoveredEntry, setHoveredEntry] = useState(null);
+  const [viewRange, setViewRange] = useState('monthly'); // 'monthly' or 'weekly'
 
   const moodOptions = [
     { value: 1, label: "Calm", icon: "flare", color: theme.colors.primary, glow: "rgba(186,195,255,0.4)" },
@@ -24,29 +25,33 @@ export default function MoodPage() {
 
   useEffect(() => {
     fetchRecentEntries();
-  }, []);
+  }, [viewRange]);
 
   const fetchRecentEntries = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const limit = viewRange === 'weekly' ? 7 : 30;
+
       const { data, error } = await supabase
         .from('mood_entries')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10); 
+        .limit(limit); 
 
       if (error) throw error;
       setRecentEntries(data || []);
     } catch (err) {
       console.error("Error fetching mood entries:", err);
-      setRecentEntries([
+      // Mock data for fallback
+      const mockEntries = [
         { created_at: new Date().toISOString(), mood: 2, note: "Starting fresh on the new app!", tags: "morning" },
         { created_at: new Date(Date.now() - 86400000).toISOString(), mood: 1, note: "Feeling centered today.", tags: "health" },
         { created_at: new Date(Date.now() - 172800000).toISOString(), mood: 3, note: "A bit nervous about work.", tags: "work" }
-      ]);
+      ];
+      setRecentEntries(viewRange === 'weekly' ? mockEntries.slice(0, 2) : mockEntries);
     }
   };
 
@@ -258,11 +263,39 @@ export default function MoodPage() {
         <div style={{ display: 'flex', flexDirection: 'column', md: { flexDirection: 'row' }, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', gap: '1.5rem' }}>
           <div>
             <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Your Mood Galaxy</h2>
-            <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>The constellations of your emotional history over the last 30 days.</p>
+            <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>The constellations of your emotional history over the last {viewRange === 'weekly' ? '7' : '30'} days.</p>
           </div>
           <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '30px', padding: '0.3rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <button style={{ background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', color: '#fff', border: 'none', borderRadius: '20px', padding: '0.6rem 1.8rem', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>Monthly</button>
-            <button style={{ background: 'none', color: '#94a3b8', border: 'none', borderRadius: '20px', padding: '0.6rem 1.8rem', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}>Weekly</button>
+            <button 
+              onClick={() => setViewRange('monthly')}
+              style={{ 
+                background: viewRange === 'monthly' ? 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)' : 'none', 
+                color: viewRange === 'monthly' ? '#fff' : '#94a3b8', 
+                border: 'none', 
+                borderRadius: '20px', 
+                padding: '0.6rem 1.8rem', 
+                fontSize: '0.85rem', 
+                fontWeight: '700', 
+                cursor: 'pointer', 
+                boxShadow: viewRange === 'monthly' ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
+                transition: 'all 0.3s ease'
+              }}
+            >Monthly</button>
+            <button 
+              onClick={() => setViewRange('weekly')}
+              style={{ 
+                background: viewRange === 'weekly' ? 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)' : 'none', 
+                color: viewRange === 'weekly' ? '#fff' : '#94a3b8', 
+                border: 'none', 
+                borderRadius: '20px', 
+                padding: '0.6rem 1.8rem', 
+                fontSize: '0.85rem', 
+                fontWeight: '700', 
+                cursor: 'pointer',
+                boxShadow: viewRange === 'weekly' ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
+                transition: 'all 0.3s ease'
+              }}
+            >Weekly</button>
           </div>
         </div>
 
