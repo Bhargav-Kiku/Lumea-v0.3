@@ -1,24 +1,25 @@
 # Lumea - System Architecture & Diagrams 📐
 
-This document provides a visual and structural overview of the **Lumea** AI Mental Health Companion, detailing user interactions, data streaming cycles, and component layering.
+This document provides a visual and structural overview of the **Lumea - Celestial Sanctuary**, detailing user interactions, data streaming cycles, and the modern Next.js component architecture.
 
 ---
 
 ## 👥 1. Use Case Diagram
-Describes how a user interacts with the various functional modules of the application.
+Describes how a user interacts with the functional modules of the sanctuary.
 
 ```mermaid
 flowchart TD
     User([User 👤])
     
-    subgraph Lumea_App [Lumea Application]
+    subgraph Lumea_App [Lumea - Celestial Sanctuary]
         direction TB
-        UC1((🔐 Authenticate))
-        UC2((🏠 View Dashboard))
+        UC1((🔐 Auth/Identity))
+        UC2((🏠 Stellar Dashboard))
         UC3((💬 Empathic Chat))
-        UC4((📊 Log & Track Mood))
-        UC5((📓 Journal Entry))
-        UC6((☀️ Theme Toggle))
+        UC4((🌌 Mood Galaxy))
+        UC5((📓 Lunar Journal))
+        UC6((🫁 Breath Sync))
+        UC7((🧘 Mindset Reframe))
     end
     
     User --> UC1
@@ -27,92 +28,89 @@ flowchart TD
     User --> UC4
     User --> UC5
     User --> UC6
+    User --> UC7
 ```
 
 ---
 
 ## 🔄 2. Data Flow Diagram (DFD)
-Tracks the flow of information from user input through processing streams down to persistent databases.
+Tracks the flow of information from user input through modern Next.js server actions and API routes.
 
 ```mermaid
 flowchart LR
-    User([User]) -->|1. Message / Mood| App[Streamlit App]
+    User([User]) -->|1. Message / Emotion| App[Next.js Client]
     
     subgraph Processing_Layer [Processing & Analytics]
         direction TB
-        App -->|2a. Validate Limit| RL[Rate Limiter]
-        App -->|2b. Check Safety| SF[Safety Utility]
-        App -->|2c. Analyze Text| HF[Hugging Face API]
-        HF -->|3. Emotion Return| App
-        App -->|4. Text + Context| Groq[Groq API]
-        Groq -->|5. Stream Response Chunks| App
-        App -->|6. Convert Audio| TTS[Edge-TTS]
+        App -->|2. Local Check| RL[Usage Tracker \n LocalStorage]
+        App -->|3. Safety Intercept| SF[Safety Library \n 100+ Phrases]
+        App -->|4. Text Analysis| HF[/api/emotion \n DistilRoBERTa]
+        HF -->|5. Emotion Score| App
+        App -->|6. GPT-Context| Groq[/api/chat \n Llama 3.3]
+        Groq -->|7. Streaming Chunks| App
     end
     
     subgraph Data_Layer [Data Persistence]
-        App -->|7. Save History| DB[(Supabase Database)]
+        App -->|8. Sync Data| DB[(Supabase Cloud)]
     end
     
-    TTS -.->|Audio Stream| User
-    App -->|Visual Insights| User
+    App -->|9. Interactive UI| User
 ```
 
 ---
 
-## 🏛️ 3. Layered System Architecture
-Highlights the decomposition of application boundaries from client frameworks to data layers.
+## 🏛️ 3. Layered System Architecture (Next.js)
+Highlights the decomposition of the "Celestial Sanctuary" architecture.
 
 ```mermaid
 flowchart TD
-    subgraph Client_Layer [Client Layer]
-        Browser[Web Browser]
-        CSS[Floating dark/light Theme CSS]
+    subgraph Presentation_Layer [Presentation Layer]
+        UI[Glassmorphism UI]
+        Theme[theme.js \n HSL System]
+        Components[Shared: PageHeader, GlassCard]
     end
 
-    subgraph Application_Layer ["Application Layer (Streamlit)"]
+    subgraph Application_Layer [Application Layer - Next.js]
         direction TB
-        Router[Router App.py]
-        Views[Views / Subpages]
-        Components[Shared Layouts / Sidebar]
-        Utils[Utils / Rate Limits]
+        AppDir[src/app \n App Router]
+        Dashboard[Dashboard / Modules]
+        API[/api/chat, /api/emotion]
+        Lib[src/lib \n Supabase, Safety]
         
-        Router --> Views
-        Views --> Components
-        Views --> Utils
+        AppDir --> Dashboard
+        Dashboard --> API
+        Dashboard --> Lib
     end
 
-    subgraph Service_Layer [External AI Node APIs]
-        Groq_API[Groq API \n Llama 3.3]
-        HF_API[Hugging Face API \n DistilRoBERTa Emotion]
-        TTS_API[Edge-TTS Node]
+    subgraph Intelligence_Layer [Intelligence Layer]
+        Groq[Groq API \n LLM Core]
+        HF[Hugging Face \n NLP Core]
     end
 
-    subgraph Database_Layer ["Database Layer (Supabase)"]
-        Auth[Supabase Auth Services]
-        Table_Profiles[(Profiles)]
-        Table_Moods[(Mood_Entries)]
-        Table_Logs[(Journal_Entries)]
-        Table_Sessions[(Chat_Sessions)]
-        Table_Messages[(Chat_Messages)]
+    subgraph Persistence_Layer [Persistence Layer]
+        Auth[Supabase Auth]
+        Tables[(Supabase Postgres)]
     end
 
     %% Connectors
-    Browser <--> Router
-    Views <--> Service_Layer
-    Router <--> Auth
-    Utils <--> Database_Layer
+    UI <--> AppDir
+    API <--> Intelligence_Layer
+    Lib <--> Persistence_Layer
 ```
 
 ---
 
 ## 🧩 4. Core Logic Flows
 
-### 💬 Chat Workflow Loop
-1. **Input**: User sends statement.
-2. **Safety Check**: Immediate interrupt verifies input against `utils/safety.py` imminent self-harm phrasing bounds matching.
-3. **Analysis**: Prompt pushes triggers via `DistilRoBERTa` vectors classifying buffers explicitly (e.g., *Sadness 85%*).
-4. **Condition Injection**: Static frames append emotional buffers to Groq headers elegantly.
-5. **Rendering / Alerting**: 
-    - **Safe pass**: Message streams real-time with ambient AI routing.
-    - **Trigger pass**: Dialogue holds/suppresses response streams and forces injection of accessible localized support cards to emergency Indian Helplines.
-6. **Datalake Sync**: Context pushes into `chat_history` SQL buffers consistently.
+### 💬 Chat Workflow: "The Reflection Loop"
+1. **User Input**: Statement is received.
+2. **Safety Barrier**: Immediate check against `src/lib/safetyPhrases.js` (100+ phrases). If triggered, generation is suppressed, and a support card is shown.
+3. **Usage Check**: Local `lumea_usage` verifies the 100-message daily limit.
+4. **Typing Animation**: A 2-second "Reflection Delay" is triggered to provide a human-like tempo.
+5. **Emotion Tagging**: Text is sent to `/api/emotion`. The resulting sentiment (e.g., *😊 Joy*) is displayed outside the bubble.
+6. **Streaming Response**: Groq API (Llama 3.3 70B) generates an empathetic reply, streamed character-by-character into the Glassmorphism bubble.
+
+### 🛡️ Safety & Rate Limiting
+- **100+ Phrases**: Robust detection of distressed language.
+- **Daily Spirit**: 100 message/day cap to encourage healthy digital boundaries.
+- **Immediate Halt**: Logic is baked into the browser-side handleSubmit to ensure no harmful content is processed by the AI.
