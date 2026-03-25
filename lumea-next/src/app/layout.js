@@ -1,5 +1,6 @@
 import "./globals.css";
-import SkyBackground from "@/components/SkyBackground";
+import DynamicBackground from "@/components/DynamicBackground";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
@@ -15,9 +16,11 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <SkyBackground />
-        {children}
-        <SpeedInsights />
+        <ThemeProvider>
+          <DynamicBackground />
+          {children}
+          <SpeedInsights />
+        </ThemeProvider>
       </body>
     </html>
   );

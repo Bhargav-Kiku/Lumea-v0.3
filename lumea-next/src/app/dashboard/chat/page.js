@@ -5,10 +5,12 @@ import { supabase } from '@/lib/supabase';
 import LimitModal from '@/components/LimitModal';
 import { isDistressDetected } from '@/lib/safetyPhrases';
 import { theme } from '@/lib/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function ChatPage() {
+  const { currentTheme } = useTheme();
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi there. I'm Lumea, your mental health companion. How are you feeling today?" }
+    { role: "assistant", content: currentTheme.copy.aiGreeter }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -82,7 +84,7 @@ export default function ChatPage() {
   const startNewChat = () => {
     setCurrentSessionId(null);
     setMessages([
-      { role: "assistant", content: "Hi there. I'm Lumea, your mental health companion. How are you feeling today?" }
+      { role: "assistant", content: currentTheme.copy.aiGreeter }
     ]);
     setIsHistoryOpen(false);
   };
@@ -190,7 +192,8 @@ export default function ChatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           messages: newMessages, 
-          current_emotion: emotionData.emotion 
+          current_emotion: emotionData.emotion,
+          themeId: currentTheme.id
         })
       });
 
@@ -259,8 +262,8 @@ export default function ChatPage() {
     }}>
 
       {/* Ambient Orbs */}
-      <div className="neon-orb" style={{ width: '300px', height: '300px', background: '#3c4b9e', top: '-50px', left: '-100px', opacity: 0.1 }}></div>
-      <div className="neon-orb" style={{ width: '300px', height: '300px', background: '#6366f1', bottom: '100px', right: '-100px', opacity: 0.08 }}></div>
+      <div className="neon-orb" style={{ width: '300px', height: '300px', background: 'var(--primary)', top: '-50px', left: '-100px', opacity: 0.1 }}></div>
+      <div className="neon-orb" style={{ width: '300px', height: '300px', background: 'var(--secondary)', bottom: '100px', right: '-100px', opacity: 0.08 }}></div>
 
       {/* History Toggle Button */}
       <button 
@@ -269,11 +272,11 @@ export default function ChatPage() {
           position: 'absolute',
           top: '1rem',
           left: '1rem',
-          background: 'rgba(30, 41, 59, 0.4)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)',
           borderRadius: '12px',
           padding: '0.6rem 1rem',
-          color: '#818cf8',
+          color: 'var(--primary)',
           cursor: 'pointer',
           zIndex: 50,
           display: 'flex',
@@ -294,18 +297,18 @@ export default function ChatPage() {
           left: 0,
           width: '300px',
           height: '100vh',
-          background: 'rgba(11, 13, 24, 0.95)',
+          background: 'var(--background)',
           backdropFilter: 'blur(40px)',
           zIndex: 200,
           padding: '2rem',
           display: 'flex',
           flexDirection: 'column',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
+          borderRight: '1px solid var(--glass-border)',
           animation: 'slideIn 0.3s ease-out'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h3 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: '800' }}>Journey History</h3>
-            <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+            <h3 style={{ color: 'var(--foreground)', fontSize: '1.2rem', fontWeight: '800' }}>Journey History</h3>
+            <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}>
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -315,8 +318,8 @@ export default function ChatPage() {
             style={{
               padding: '1rem',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)',
-              color: '#fff',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+              color: 'var(--foreground)',
               border: 'none',
               fontWeight: '700',
               marginBottom: '2rem',
@@ -338,9 +341,9 @@ export default function ChatPage() {
                 style={{
                   padding: '1rem',
                   borderRadius: '12px',
-                  background: currentSessionId === session.id ? 'rgba(129, 140, 248, 0.1)' : 'transparent',
-                  border: currentSessionId === session.id ? '1px solid rgba(129, 140, 248, 0.4)' : '1px solid transparent',
-                  color: currentSessionId === session.id ? '#818cf8' : '#94a3b8',
+                  background: currentSessionId === session.id ? 'var(--primary-glow)' : 'transparent',
+                  border: currentSessionId === session.id ? '1px solid var(--primary)' : '1px solid transparent',
+                  color: currentSessionId === session.id ? 'var(--primary)' : 'var(--muted)',
                   textAlign: 'left',
                   fontSize: '0.9rem',
                   cursor: 'pointer',
@@ -360,8 +363,12 @@ export default function ChatPage() {
 
       {/* Header */}
       <div className="animate-fade-in" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-0.025em', marginBottom: '0.4rem', color: '#f8fafc' }}>Celestial Sanctuary</h1>
-        <p style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: '500', opacity: 0.8 }}>A safe space for your thoughts</p>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-0.025em', marginBottom: '0.4rem', color: 'var(--foreground)' }}>
+          {currentTheme.id === 'night-sky' ? "Celestial Sanctuary" : "Chat Reflection"}
+        </h1>
+        <p style={{ color: 'var(--muted)', fontSize: '1rem', fontWeight: '500', opacity: 0.8 }}>
+          {currentTheme.id === 'night-sky' ? "A safe space for your thoughts" : "A calm space for mindful conversation"}
+        </p>
       </div>
 
       <style>{`
@@ -382,12 +389,12 @@ export default function ChatPage() {
           backdropFilter: 'blur(10px)'
         }}>
           <h4 style={{ color: '#ef4444', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>🤝 You matter to us</h4>
-          <p style={{ color: '#fca5a5', fontSize: '0.9rem', marginBottom: '0.6rem' }}>If you are feeling overwhelmed, you are not alone. Please consider reaching out:</p>
-          <p style={{ fontSize: '0.9rem', color: '#e2e8f0', fontWeight: '600' }}>📞 Helplines inside India:</p>
-          <ul style={{ fontSize: '0.9rem', color: '#e2e8f0', paddingLeft: '1.4rem', marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <li>Vandrevala Foundation: <span style={{ color: '#fff' }}>9999 666 555</span></li>
-            <li>AASRA: <span style={{ color: '#fff' }}>9820466726</span></li>
-          </ul>
+           <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '0.6rem' }}>If you are feeling overwhelmed, you are not alone. Please consider reaching out:</p>
+           <p style={{ fontSize: '0.9rem', color: 'var(--foreground)', fontWeight: '600' }}>📞 Helplines inside India:</p>
+           <ul style={{ fontSize: '0.9rem', color: 'var(--foreground)', paddingLeft: '1.4rem', marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+             <li>Vandrevala Foundation: <span style={{ color: 'var(--foreground)' }}>9999 666 555</span></li>
+             <li>AASRA: <span style={{ color: 'var(--foreground)' }}>9820466726</span></li>
+           </ul>
         </div>
       )}
 
@@ -414,22 +421,22 @@ export default function ChatPage() {
               {/* Lumea Avatar Header */}
               {!isUser && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem', marginLeft: '0.4rem' }}>
-                  <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-                    <span style={{ fontSize: '14px' }}>✨</span>
+                  <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+                    <span style={{ fontSize: '14px' }}>{currentTheme.icon}</span>
                   </div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#818cf8' }}>Lumea</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--primary)' }}>Lumea</span>
                 </div>
               )}
 
               {/* Message Bubble */}
               <div style={{
                 padding: '1.2rem',
-                borderRadius: theme.borderRadius.lg,
-                borderTopLeftRadius: !isUser ? '4px' : theme.borderRadius.lg,
-                borderTopRightRadius: isUser ? '4px' : theme.borderRadius.lg,
-                background: isUser ? `linear-gradient(135deg, ${theme.colors.primaryContainer} 0%, #293676 100%)` : theme.colors.glass,
-                border: !isUser ? `1px solid ${theme.colors.glassBorder}` : '1px solid rgba(255,255,255,0.02)',
-                color: theme.colors.foreground,
+                borderRadius: '16px',
+                borderTopLeftRadius: !isUser ? '4px' : '16px',
+                borderTopRightRadius: isUser ? '4px' : '16px',
+                background: isUser ? `var(--primary)` : 'var(--glass-bg)',
+                border: !isUser ? `1px solid var(--glass-border)` : '1px solid var(--primary-glow)',
+                color: isUser ? '#fff' : 'var(--foreground)',
                 whiteSpace: 'pre-wrap',
                 lineHeight: '1.6',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
@@ -447,7 +454,7 @@ export default function ChatPage() {
                   gap: '0.4rem',
                   background: 'transparent',
                   fontSize: '0.75rem',
-                  color: '#c4b5fd',
+                  color: 'var(--primary)',
                   marginTop: '0.4rem',
                   marginRight: '0.4rem',
                   opacity: 0.9,
@@ -458,7 +465,7 @@ export default function ChatPage() {
               )}
               
               {/* Timestamp placeholder / Optional marker */}
-              <span style={{ marginTop: '0.4rem', marginLeft: !isUser ? '0.4rem' : '0', marginRight: isUser ? '0.4rem' : '0', fontSize: '10px', color: 'rgba(148, 163, 184, 0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span style={{ marginTop: '0.4rem', marginLeft: !isUser ? '0.4rem' : '0', marginRight: isUser ? '0.4rem' : '0', fontSize: '10px', color: 'var(--muted)', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {isUser ? 'Delivered' : 'Sent'}
               </span>
             </div>
@@ -473,25 +480,27 @@ export default function ChatPage() {
             maxWidth: '85%'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem', marginLeft: '0.4rem' }}>
-              <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-                <span style={{ fontSize: '14px' }}>✨</span>
+              <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+                <span style={{ fontSize: '14px' }}>{currentTheme.icon}</span>
               </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#818cf8' }}>Lumea is reflecting</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--primary)' }}>
+                {currentTheme.id === 'night-sky' ? "Lumea is reflecting" : "Lumea is typing..."}
+              </span>
             </div>
             <div style={{
               padding: '1rem 1.5rem',
-              borderRadius: theme.borderRadius.lg,
+              borderRadius: '16px',
               borderTopLeftRadius: '4px',
-              background: theme.colors.glass,
-              border: `1px solid ${theme.colors.glassBorder}`,
+              background: 'var(--glass-bg)',
+              border: `1px solid var(--glass-border)`,
               backdropFilter: 'blur(20px)',
               display: 'flex',
               gap: '0.4rem',
               alignItems: 'center'
             }}>
-              <div className="typing-dot" style={{ width: '8px', height: '8px', background: theme.colors.primary, borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out' }}></div>
-              <div className="typing-dot" style={{ width: '8px', height: '8px', background: theme.colors.primary, borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out', animationDelay: '0.2s' }}></div>
-              <div className="typing-dot" style={{ width: '8px', height: '8px', background: theme.colors.primary, borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out', animationDelay: '0.4s' }}></div>
+              <div className="typing-dot" style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out' }}></div>
+              <div className="typing-dot" style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out', animationDelay: '0.2s' }}></div>
+              <div className="typing-dot" style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', animation: 'typing-wave 1.4s infinite ease-in-out', animationDelay: '0.4s' }}></div>
             </div>
           </div>
         )}
@@ -526,10 +535,10 @@ export default function ChatPage() {
                 style={{
                   padding: '0.6rem 1rem',
                   borderRadius: '20px',
-                  background: 'rgba(30, 41, 59, 0.4)',
+                  background: 'var(--glass-bg)',
                   backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  color: '#818cf8',
+                  border: '1px solid var(--glass-border)',
+                  color: 'var(--primary)',
                   fontSize: '0.8rem',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -544,7 +553,7 @@ export default function ChatPage() {
 
           {/* Input Capsule Frame */}
           <form onSubmit={handleSubmit} style={{ 
-            background: 'rgba(11, 13, 24, 0.6)', 
+            background: 'var(--glass-bg)', 
             backdropFilter: 'blur(30px)', 
             borderRadius: '24px', 
             padding: '0.5rem 0.8rem', 
@@ -552,9 +561,9 @@ export default function ChatPage() {
             alignItems: 'center', 
             gap: '0.8rem', 
             boxShadow: '0 20px 50px rgba(0,0,0,0.6)', 
-            border: '1px solid rgba(255,255,255,0.04)' 
+            border: '1px solid var(--glass-border)' 
           }}>
-            <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1.5rem' }}>➕</span>
             </button>
 
@@ -570,7 +579,7 @@ export default function ChatPage() {
                 border: 'none', 
                 outline: 'none', 
                 boxShadow: 'none', 
-                color: '#f8fafc', 
+                color: 'var(--foreground)', 
                 padding: '0.6rem', 
                 fontSize: '0.95rem',
                 width: '100%',
@@ -579,11 +588,11 @@ export default function ChatPage() {
             />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: '#94a3b8', cursor: 'pointer' }}>
+              <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: 'var(--muted)', cursor: 'pointer' }}>
                 <span style={{ fontSize: '1.4rem' }}>🎤</span>
               </button>
               <button type="submit" disabled={loading} style={{ 
-                background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', 
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', 
                 border: 'none', 
                 borderRadius: '12px', 
                 width: '40px', 
@@ -609,3 +618,4 @@ export default function ChatPage() {
     </div>
   );
 }
+

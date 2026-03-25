@@ -2,7 +2,7 @@ import { Groq } from 'groq-sdk';
 
 export async function POST(request) {
   try {
-    const { entries } = await request.json();
+    const { entries, themeId } = await request.json();
 
     if (!entries || entries.length === 0) {
       return Response.json({ insight: "No mood data yet. Start tracking to see your patterns unfold." });
@@ -30,7 +30,8 @@ export async function POST(request) {
           role: 'system',
           content: `You are Lumea, a compassionate AI journaling companion. 
 Analyze the user's recent mood entries and provide a warm, poetic, 1-2 sentence insight about their emotional patterns. 
-Be encouraging, use gentle celestial metaphors, and be specific about what you notice. 
+Be encouraging and specific about what you notice. 
+${themeId === 'night-sky' ? 'Use gentle celestial and star-themed metaphors.' : 'Use human-centric, grounded metaphors about growth, flow, and inner peace. Avoid celestial/star references.'}
 Never diagnose or give clinical advice. Keep it to 30 words max.`
         },
         {
@@ -47,6 +48,7 @@ Never diagnose or give clinical advice. Keep it to 30 words max.`
 
   } catch (err) {
     console.error("Mood insight error:", err);
-    return Response.json({ insight: "Your stars are aligning. Keep tracking to reveal the patterns." });
+    const fallback = themeId === 'night-sky' ? "Your stars are aligning." : "Your emotional journey is unfolding beautifully.";
+    return Response.json({ insight: `${fallback} Keep tracking to reveal the patterns.` });
   }
 }

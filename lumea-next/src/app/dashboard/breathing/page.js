@@ -31,9 +31,9 @@ export default function LunarBreathingPage() {
           <div className={`orb-core ${!isPlaying ? 'paused' : ''}`} style={{
             position: 'absolute',
             inset: 0,
-            background: `linear-gradient(135deg, ${theme.colors.primaryContainer} 0%, #293676 100%)`,
+            background: 'var(--primary)',
             borderRadius: '50%',
-            boxShadow: `0 0 80px 20px rgba(186, 195, 255, 0.2)`,
+            boxShadow: '0 0 80px 20px var(--primary-glow)',
             opacity: 0.9,
             zIndex: 1
           }}></div>
@@ -48,8 +48,8 @@ export default function LunarBreathingPage() {
           
           {/* Current Instruction */}
           <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
-             <h2 className={`orb-text ${!isPlaying ? 'paused' : ''}`} style={{ fontSize: '2.5rem', fontWeight: '800', color: theme.colors.tertiary, marginBottom: '0.25rem', letterSpacing: '-0.025em' }}> </h2>
-             <p style={{ color: 'rgba(223, 225, 255, 0.7)', fontSize: '0.85rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase' }}>4 Seconds</p>
+             <h2 className={`orb-text ${!isPlaying ? 'paused' : ''}`} style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '0.25rem', letterSpacing: '-0.025em' }}> </h2>
+             <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: 0.8 }}>4 Seconds</p>
           </div>
         </div>
 
@@ -67,18 +67,18 @@ export default function LunarBreathingPage() {
         {/* Bento Grid Instructions */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           {[
-            { icon: 'air', title: 'Inhale', desc: 'Fill your lungs slowly for 4 seconds.' },
-            { icon: 'pause_circle', title: 'Hold', desc: 'Suspend your breath for 4 seconds.' },
-            { icon: 'wind_power', title: 'Exhale', desc: 'Release every drop for 4 seconds.' },
-            { icon: 'all_inclusive', title: 'Hold', desc: 'Wait in the stillness for 4 seconds.' }
+            { icon: 'air', title: 'Inhale', desc: 'Fill your lungs slowly for 4s.' },
+            { icon: 'pause_circle', title: 'Hold', desc: 'Suspend your breath for 4s.' },
+            { icon: 'wind_power', title: 'Exhale', desc: 'Release every drop for 4s.' },
+            { icon: 'all_inclusive', title: 'Hold', desc: 'Wait in the stillness for 4s.' }
           ].map((item, idx) => (
             <div key={idx} style={{ 
-              background: 'rgba(17, 19, 28, 0.6)', backdropFilter: 'blur(12px)', padding: '1.5rem', borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.glassBorder}`,
+              background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', padding: '1.25rem', borderRadius: theme.borderRadius.md, border: `1px solid var(--glass-border)`,
               transition: 'all 0.3s ease', cursor: 'default'
-            }} onMouseOver={e => e.currentTarget.style.background = 'rgba(29, 31, 43, 0.8)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(17, 19, 28, 0.6)'}>
-              <span className="material-symbols-outlined" style={{ color: theme.colors.primary, marginBottom: '0.75rem', fontSize: '1.75rem' }}>{item.icon}</span>
-              <h4 style={{ fontWeight: '600', color: theme.colors.foreground, fontSize: '0.95rem', marginBottom: '0.25rem' }}>{item.title}</h4>
-              <p style={{ color: theme.colors.onSurfaceVariant, fontSize: '0.8rem', lineHeight: '1.5' }}>{item.desc}</p>
+            }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--primary)', marginBottom: '0.75rem', fontSize: '1.75rem' }}>{item.icon}</span>
+              <h4 style={{ fontWeight: '600', color: 'var(--foreground)', fontSize: '0.95rem', marginBottom: '0.25rem' }}>{item.title}</h4>
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: '1.4' }}>{item.desc}</p>
             </div>
           ))}
         </div>
@@ -88,9 +88,9 @@ export default function LunarBreathingPage() {
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5rem', width: '100%' }}>
         <button onClick={() => setIsPlaying(!isPlaying)} style={{ 
           display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem 3rem',
-          background: `linear-gradient(135deg, ${theme.colors.primaryContainer} 0%, #293676 100%)`, color: '#f1e7ff',
+          background: 'var(--primary)', color: '#fff',
           borderRadius: theme.borderRadius.full, border: 'none', cursor: 'pointer',
-          boxShadow: '0 10px 30px rgba(41,54,118,0.4)', transition: 'transform 0.2s ease'
+          boxShadow: '0 10px 30px var(--primary-glow)', transition: 'transform 0.2s ease'
         }}
         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
         onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -103,7 +103,7 @@ export default function LunarBreathingPage() {
       {/* Decorative Mood Card */}
       <div style={{ 
         width: '100%', padding: '2rem', borderRadius: theme.borderRadius.xl, position: 'relative', overflow: 'hidden',
-        background: 'rgba(35, 37, 51, 0.4)', backdropFilter: 'blur(16px)', border: `1px solid ${theme.colors.glassBorder}`
+        background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)'
       }}>
         <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}>
           <span className="material-symbols-outlined" style={{ fontSize: '8rem' }}>nights_stay</span>
@@ -118,10 +118,10 @@ export default function LunarBreathingPage() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ flex: 1, height: '4px', background: '#171924', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: '60%', background: theme.colors.primary, borderRadius: '4px' }}></div>
+          <div style={{ flex: 1, height: '4px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: '60%', background: 'var(--primary)', borderRadius: '4px' }}></div>
           </div>
-          <span style={{ fontSize: '0.65rem', color: theme.colors.onSurfaceVariant, fontFamily: 'monospace', letterSpacing: '0.05em' }}>12:04 / 20:00</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>12:04 / 20:00</span>
         </div>
       </div>
 
@@ -155,22 +155,22 @@ export default function LunarBreathingPage() {
 
         /* Dot Indicators */
         @keyframes active-dot-1 {
-          0%, 24.9% { background: #bac3ff; box-shadow: 0 0 12px rgba(186,195,255,0.6); border-color: transparent; }
-          25%, 100% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
+          0%, 24.9% { background: var(--primary); box-shadow: 0 0 12px var(--primary-glow); border-color: transparent; }
+          25%, 100% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
         }
         @keyframes active-dot-2 {
-          0%, 24.9% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
-          25%, 49.9% { background: #bac3ff; box-shadow: 0 0 12px rgba(186,195,255,0.6); border-color: transparent; }
-          50%, 100% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
+          0%, 24.9% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
+          25%, 49.9% { background: var(--primary); box-shadow: 0 0 12px var(--primary-glow); border-color: transparent; }
+          50%, 100% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
         }
         @keyframes active-dot-3 {
-          0%, 49.9% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
-          50%, 74.9% { background: #bac3ff; box-shadow: 0 0 12px rgba(186,195,255,0.6); border-color: transparent; }
-          75%, 100% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
+          0%, 49.9% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
+          50%, 74.9% { background: var(--primary); box-shadow: 0 0 12px var(--primary-glow); border-color: transparent; }
+          75%, 100% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
         }
         @keyframes active-dot-4 {
-          0%, 74.9% { background: #1d1f2b; box-shadow: none; border-color: rgba(69,71,86,0.5); }
-          75%, 100% { background: #bac3ff; box-shadow: 0 0 12px rgba(186,195,255,0.6); border-color: transparent; }
+          0%, 74.9% { background: transparent; box-shadow: none; border-color: var(--glass-border); }
+          75%, 100% { background: var(--primary); box-shadow: 0 0 12px var(--primary-glow); border-color: transparent; }
         }
 
         .orb-core { animation: breath-cycle 16s ease-in-out infinite; }
@@ -178,7 +178,7 @@ export default function LunarBreathingPage() {
         .orb-ring-2 { animation: breath-ring-2 16s ease-in-out infinite; }
         .orb-text::after { content: 'Inhale'; animation: breath-text 16s infinite; }
         
-        .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(69,71,86,0.5); background: #1d1f2b; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--glass-border); background: transparent; }
         .dot-1 { animation: active-dot-1 16s infinite; }
         .dot-2 { animation: active-dot-2 16s infinite; }
         .dot-3 { animation: active-dot-3 16s infinite; }

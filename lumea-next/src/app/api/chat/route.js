@@ -2,7 +2,8 @@ import { Groq } from 'groq-sdk'
 
 export async function POST(request) {
   try {
-    const { messages, current_emotion } = await request.json()
+    const { messages, current_emotion, themeId } = await request.json()
+    const isNightSky = themeId === 'night-sky'
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -28,16 +29,23 @@ export async function POST(request) {
     const groq = new Groq({ apiKey })
 
     let systemPrompt = 
-      "You are Lumea, the compassionate AI guardian of the Celestial Sanctuary. " +
-      "Your purpose is to provide an empathetic, non-judgmental space for emotional processing. " +
-      "Use warm, poetic, and grounding language inspired by the stars and the moon. " +
-      "Guidelines:\n" +
+      isNightSky
+        ? "You are Lumea, the compassionate AI guardian of the Celestial Sanctuary. " +
+          "Your purpose is to provide an empathetic, non-judgmental space for emotional processing. " +
+          "Use warm, poetic, and grounding language inspired by the stars and the moon. "
+        : "You are Lumea, the compassionate AI. " +
+          "Your purpose is to provide an empathetic, non-judgmental space for emotional processing. " +
+          "Use warm, kind, and grounding language. "
+    
+    systemPrompt += "Guidelines:\n" +
       "- Be concise and deeply empathetic.\n" +
       "- Never provide medical or clinical advice.\n" +
       "- If the user expresses extreme distress, de-escalate with profound care and gently direct them to the professional resources available in their safety panel."
 
     if (current_emotion && !current_emotion.startsWith('⚠️')) {
-      systemPrompt += `\n\n[Celestial Context: The seeker is currently experiencing ${current_emotion}. Align your cosmic resonance with this state.]`
+      const contextPrefix = isNightSky ? "[Celestial Context: The seeker" : "[Emotional Context: The user";
+      const contextSuffix = isNightSky ? "Align your cosmic resonance with this state.]" : "Align your empathetic response with this state.]";
+      systemPrompt += `\n\n${contextPrefix} is currently experiencing ${current_emotion}. ${contextSuffix}`;
     }
 
     const cleanMessages = [

@@ -111,8 +111,8 @@ export default function AuthModal({ isOpen, onClose }) {
         maxWidth: '400px', 
         position: 'relative',
         padding: '2rem',
-        backgroundColor: 'rgba(15, 23, 42, 0.85)', // Slightly darker for contrast on overlay
-        border: '1px solid rgba(255, 255, 255, 0.12)'
+        backgroundColor: 'var(--background)',
+        border: '1px solid var(--glass-border)'
       }} onClick={(e) => e.stopPropagation()}>
         
         {/* Close Button */}
@@ -129,7 +129,7 @@ export default function AuthModal({ isOpen, onClose }) {
             cursor: 'pointer',
             transition: 'color 0.2s'
           }}
-          onMouseOver={(e) => e.target.style.color = 'white'}
+          onMouseOver={(e) => e.target.style.color = 'var(--foreground)'}
           onMouseOut={(e) => e.target.style.color = 'var(--muted)'}
         >
           ✕

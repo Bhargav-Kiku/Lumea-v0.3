@@ -12,7 +12,7 @@ export default function GlassCard({ children, style = {}, className = "" }) {
         borderRadius: theme.borderRadius.xl,
         padding: '2rem',
         border: `1px solid ${theme.colors.glassBorder}`,
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+        boxShadow: 'var(--glass-shadow, 0 20px 50px rgba(0,0,0,0.5))',
         position: 'relative',
         overflow: 'hidden',
         ...style

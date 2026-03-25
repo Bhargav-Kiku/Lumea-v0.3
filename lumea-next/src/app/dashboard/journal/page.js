@@ -268,11 +268,11 @@ export default function JournalPage() {
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '0.4rem', 
-                  color: '#fff', 
+                  color: 'var(--foreground)', 
                   fontWeight: '600', 
                   fontSize: '0.85rem', 
                   cursor: 'pointer', 
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 12px var(--primary-glow)',
                   opacity: loading ? 0.6 : 1
                 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>check</span>
@@ -281,7 +281,7 @@ export default function JournalPage() {
               </div>
 
               {/* Enhancement Tools Tools */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.5rem', borderRadius: theme.borderRadius.lg, border: `1px solid ${theme.colors.glassBorder}` }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', background: 'var(--glass-bg)', padding: '0.5rem', borderRadius: theme.borderRadius.lg, border: `1px solid var(--glass-border)` }}>
                 {/* Photo Upload */}
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: imageFile ? theme.colors.primary : theme.colors.muted, cursor: 'pointer', padding: '0.4rem 0.8rem', borderRadius: '12px', background: imageFile ? 'rgba(129, 140, 248, 0.1)' : 'transparent' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>image</span>
@@ -322,7 +322,7 @@ export default function JournalPage() {
                     </div>
                   )}
                   {audioUrl && (
-                    <div style={{ flex: 1, background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: `1px solid ${theme.colors.glassBorder}` }}>
+                    <div style={{ flex: 1, background: 'var(--glass-bg)', borderRadius: '12px', padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: `1px solid var(--glass-border)` }}>
                       <audio src={audioUrl} controls style={{ height: '30px', flex: 1 }} />
                       <button onClick={() => { setAudioBlob(null); setAudioUrl(null); }} style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize: '12px' }}>×</button>
                     </div>
@@ -368,27 +368,27 @@ export default function JournalPage() {
           
           {/* Archive Calendar Display */}
           <div style={{ 
-            background: 'rgba(30, 41, 59, 0.2)', 
+            background: 'var(--glass-bg)', 
             backdropFilter: 'blur(20px)', 
             borderRadius: '20px', 
             padding: '1.5rem', 
-            border: '1px solid rgba(255,255,255,0.04)' 
+            border: '1px solid var(--glass-border)' 
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f8fafc', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#818cf8' }}>📅</span> {viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--foreground)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--primary)' }}>📅</span> {viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
               </h3>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>chevron_left</span>
                 </button>
-                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>chevron_right</span>
                 </button>
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.4rem', textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.4rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--muted)' }}>
               {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, idx) => <span key={idx} style={{ fontWeight: '700', fontSize: '0.7rem' }}>{d}</span>)}
               
               {/* Calendar Days */}
@@ -421,11 +421,11 @@ export default function JournalPage() {
                           }
                         }}
                         style={{ 
-                          background: isSelected ? 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)' : 'none', 
-                          border: isToday ? '1px solid rgba(129, 140, 248, 0.4)' : 'none', 
+                          background: isSelected ? 'var(--primary)' : 'none', 
+                          border: isToday ? '1px solid var(--primary)' : 'none', 
                           borderRadius: '8px', 
                           padding: '0.5rem 0', 
-                          color: isSelected ? '#fff' : hasEntry ? '#f8fafc' : '#64748b', 
+                          color: isSelected ? '#fff' : hasEntry ? 'var(--foreground)' : 'var(--muted)', 
                           fontSize: '0.75rem', 
                           cursor: 'pointer',
                           fontWeight: isSelected || hasEntry ? '700' : '500',
@@ -446,7 +446,7 @@ export default function JournalPage() {
             {selectedDate && (
               <button 
                 onClick={() => setSelectedDate(null)}
-                style={{ width: '100%', marginTop: '1rem', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', color: '#818cf8', borderRadius: '8px', padding: '0.4rem', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer' }}
+                style={{ width: '100%', marginTop: '1rem', background: 'var(--primary-glow)', border: '1px solid var(--primary)', color: 'var(--primary)', borderRadius: '8px', padding: '0.4rem', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer' }}
               >
                 Clear Filter
               </button>
@@ -455,15 +455,15 @@ export default function JournalPage() {
 
           {/* Lunar Phases Timeline */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#c084fc' }}>🌙</span> {selectedDate ? 'Selected Date' : 'Recent Reflections'}
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--foreground)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: 'var(--primary)' }}>🌙</span> {selectedDate ? 'Selected Date' : 'Recent Reflections'}
             </h3>
 
             <div style={{ position: 'relative', paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div style={{ position: 'absolute', left: '11px', top: '10px', bottom: '10px', width: '2px', background: 'linear-gradient(to bottom, rgba(99,102,241,0.3), rgba(255,255,255,0.05))' }}></div>
 
               {entries.length === 0 ? (
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>No historical phases logged yet.</p>
+                <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontStyle: 'italic', fontWeight: '600' }}>No historical phases logged yet.</p>
               ) : (
                 entries.map((entry, idx) => (
                   <div key={entry.id} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setViewingEntry(entry)}>
@@ -482,8 +482,8 @@ export default function JournalPage() {
                       <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#818cf8', fontWeight: '700' }}>
                         {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#f8fafc', margin: 0 }}>{entry.title || 'Untitled Reflection'}</h4>
-                      <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', margin: 0, lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>"{entry.content}"</p>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--foreground)', margin: 0 }}>{entry.title || 'Untitled Reflection'}</h4>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontStyle: 'italic', margin: 0, lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>"{entry.content}"</p>
                       
                       {/* Media Badges in List */}
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
@@ -539,9 +539,9 @@ export default function JournalPage() {
           <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.2em', color: theme.colors.primary, fontWeight: '700' }}>
             Reflection from {new Date(viewingEntry.created_at).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f8fafc', marginTop: '0.5rem', marginBottom: '2rem' }}>{viewingEntry.title || 'Untitled Reflection'}</h2>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--foreground)', marginTop: '0.5rem', marginBottom: '2rem' }}>{viewingEntry.title || 'Untitled Reflection'}</h2>
           
-          <div style={{ color: '#e2e8f0', fontSize: '1.2rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '2.5rem' }}>
+          <div style={{ color: 'var(--foreground)', fontSize: '1.2rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', marginBottom: '2.5rem' }}>
             {viewingEntry.content}
           </div>
 
@@ -554,8 +554,8 @@ export default function JournalPage() {
                 </div>
               )}
               {mediaUrls.aud && (
-                <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1.5rem', borderRadius: '16px', border: `1px solid ${theme.colors.glassBorder}` }}>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '700', color: theme.colors.tertiary, textTransform: 'uppercase', marginBottom: '1rem' }}>Voice Recording</p>
+                <div style={{ background: 'var(--glass-bg)', padding: '1.5rem', borderRadius: '16px', border: `1px solid var(--glass-border)` }}>
+                  <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '1rem' }}>Voice Recording</p>
                   <audio src={mediaUrls.aud} controls style={{ width: '100%' }} />
                 </div>
               )}

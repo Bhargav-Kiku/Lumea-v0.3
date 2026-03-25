@@ -1,28 +1,28 @@
 export const theme = {
   colors: {
-    primary: '#bac3ff',
-    primaryContainer: '#3c4b9e',
-    onPrimaryContainer: '#dfe1ff',
-    secondary: '#818cf8',
-    secondaryContainer: 'rgba(129, 140, 248, 0.1)',
-    tertiary: '#f1e7ff',
-    tertiaryDim: '#d6c9ee',
+    primary: 'var(--primary)',
+    primaryContainer: 'var(--primary-glow)',
+    onPrimaryContainer: 'var(--foreground)',
+    secondary: 'var(--secondary)',
+    secondaryContainer: 'var(--primary-glow)',
+    tertiary: 'var(--primary)',
+    tertiaryDim: 'var(--muted)',
     
-    surface: '#05060b',
-    surfaceContainerHighest: '#232533',
-    surfaceContainerHigh: '#1d1f2b',
-    surfaceContainerLow: '#11131c',
+    surface: 'var(--background)',
+    surfaceContainerHighest: 'var(--glass-bg)',
+    surfaceContainerHigh: 'var(--glass-bg)',
+    surfaceContainerLow: 'var(--background)',
     
-    foreground: '#f8fafc',
-    muted: '#94a3b8',
-    onSurfaceVariant: '#a9aabc',
-    outline: '#737485',
+    foreground: 'var(--foreground)',
+    muted: 'var(--muted)',
+    onSurfaceVariant: 'var(--muted)',
+    outline: 'var(--glass-border)',
     
-    glass: 'rgba(30, 41, 59, 0.4)',
-    glassBorder: 'rgba(255, 255, 255, 0.05)',
+    glass: 'var(--glass-bg)',
+    glassBorder: 'var(--glass-border)',
     
-    accent: '#a855f7',
-    glow: 'rgba(168, 85, 247, 0.4)'
+    accent: 'var(--secondary)',
+    glow: 'var(--primary-glow)'
   },
   borderRadius: {
     sm: '8px',

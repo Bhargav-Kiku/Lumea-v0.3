@@ -132,9 +132,9 @@ export default function MindsetReframePage() {
             disabled={loading || !automaticThought.trim()}
             style={{ 
               width: '100%', padding: '1.25rem', borderRadius: '2rem', 
-              background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', color: '#f1e7ff',
+              background: 'var(--primary)', color: '#fff',
               fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer',
-              boxShadow: '0 10px 40px rgba(41, 54, 158, 0.25)', transition: 'all 0.3s',
+              boxShadow: '0 10px 40px var(--primary-glow)', transition: 'all 0.3s',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
             }}
           >
@@ -172,8 +172,8 @@ export default function MindsetReframePage() {
                 <p style={{ color: theme.colors.primary, fontWeight: '800', fontSize: '1.25rem' }}>Detected Pattern: {analysis.distortion}</p>
                 <p style={{ color: theme.colors.onSurfaceVariant, fontStyle: 'italic', lineHeight: '1.6' }}>"{analysis.description}"</p>
                 <div style={{ 
-                  display: 'flex', alignItems: 'start', gap: '0.75rem', color: theme.colors.tertiary, 
-                  backgroundColor: 'rgba(60, 75, 158, 0.15)', padding: '1.25rem', borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.glassBorder}` 
+                  display: 'flex', alignItems: 'start', gap: '0.75rem', color: 'var(--primary)', 
+                  backgroundColor: 'var(--primary-glow)', padding: '1.25rem', borderRadius: theme.borderRadius.md, border: `1px solid var(--glass-border)` 
                 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '1.25rem' }}>lightbulb</span>
                   <p style={{ fontSize: '0.9rem', fontStyle: 'italic', lineHeight: '1.5' }}>{analysis.reframe_prompt}</p>
@@ -202,9 +202,9 @@ export default function MindsetReframePage() {
                   onClick={handleSaveReframe}
                   disabled={saveLoading || !reframeInput.trim()}
                   style={{ 
-                    width: '100%', padding: '1.25rem', borderRadius: '2rem', backgroundColor: theme.colors.primary, 
-                    color: '#00083f', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer',
-                    transition: 'all 0.3s', boxShadow: '0 10px 30px rgba(186, 195, 255, 0.15)'
+                    width: '100%', padding: '1.25rem', borderRadius: '2rem', backgroundColor: 'var(--primary)', 
+                    color: '#fff', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer',
+                    transition: 'all 0.3s', boxShadow: '0 10px 30px var(--primary-glow)'
                   }}
                 >
                   <span className="material-symbols-outlined" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }}>save</span>
@@ -212,8 +212,8 @@ export default function MindsetReframePage() {
                 </button>
               </div>
             ) : (
-              <div style={{ width: '100%', height: '8rem', backgroundColor: 'rgba(23, 25, 36, 0.4)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(69, 71, 86, 0.3)' }}>
-                <span style={{ color: theme.colors.outline, fontSize: '0.9rem' }}>Awaiting analysis...</span>
+              <div style={{ width: '100%', height: '8rem', backgroundColor: 'var(--glass-bg)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--glass-border)' }}>
+                <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Awaiting analysis...</span>
               </div>
             )}
           </div>

@@ -5,8 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { theme } from '@/lib/theme';
 import PageHeader from '@/components/PageHeader';
 import GlassCard from '@/components/GlassCard';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function MoodPage() {
+  const { currentTheme } = useTheme();
   const [selectedMood, setSelectedMood] = useState(null);
   const [note, setNote] = useState('');
   const [tags, setTags] = useState('');
@@ -23,7 +25,7 @@ export default function MoodPage() {
     '"The moon does not fight the darkness; it simply shines within it."',
     '"Within you there is a stillness and sanctuary to which you can retreat at any time."',
     '"You are the sky. Everything else is just the weather."',
-    '"Be gentle with yourself. You are a child of the universe."',
+    currentTheme.id === 'night-sky' ? '"Be gentle with yourself. You are a child of the universe."' : '"Be gentle with yourself. You are growing every day."',
     '"Peace is not the absence of storm, but calm in the midst of it."',
     '"Every emotion is a wave — acknowledge it, then let it pass."',
     '"Your feelings are valid. Your healing is real. Your growth is happening."',
@@ -38,14 +40,24 @@ export default function MoodPage() {
   ];
 
   useEffect(() => {
-    fetchRecentEntries();
-    fetchTodayEntry();
-    fetchStreak();
+    const initFetch = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        // Pass user to prevent parallel getUser() calls (Supabase lock issue)
+        fetchRecentEntries(user);
+        fetchTodayEntry(user);
+        fetchStreak(user);
+      } catch (err) {
+        console.error("Auth init error:", err);
+      }
+    };
+    initFetch();
   }, [viewRange]);
 
-  const fetchStreak = async () => {
+  const fetchStreak = async (user) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Fetch last 60 entries (enough to cover any realistic streak)
@@ -81,9 +93,8 @@ export default function MoodPage() {
     }
   };
 
-  const fetchTodayEntry = async () => {
+  const fetchTodayEntry = async (user) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const start = new Date();
@@ -107,9 +118,8 @@ export default function MoodPage() {
     }
   };
 
-  const fetchRecentEntries = async () => {
+  const fetchRecentEntries = async (user) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const limit = viewRange === 'weekly' ? 7 : 30;
@@ -157,7 +167,7 @@ export default function MoodPage() {
 
       if (error) throw error;
 
-      setMessage("✅ Entry recorded into your galaxy.");
+      setMessage(currentTheme.id === 'night-sky' ? "✅ Entry recorded into your galaxy." : "✅ Entry recorded successfully.");
       setSelectedMood(null);
       setNote('');
       setTags('');
@@ -179,9 +189,11 @@ export default function MoodPage() {
       
       {/* Header */}
       <PageHeader 
-        title="How is your"
-        subtitle="inner sky"
-        description="Take a moment to center yourself. Your emotions are like shifting stars; let's map them together in your celestial sanctuary."
+        title={currentTheme.id === 'night-sky' ? "How is your" : "Dashboard"}
+        subtitle={currentTheme.id === 'night-sky' ? "inner sky" : ""}
+        description={currentTheme.id === 'night-sky' 
+          ? "Take a moment to center yourself. Your emotions are like shifting stars; let's map them together in your celestial sanctuary."
+          : "Take a moment to center yourself. Map your emotional patterns and find balance in your daily journey."}
       />
 
       {/* Bento Grid */}
@@ -208,8 +220,8 @@ export default function MoodPage() {
                       justifyContent: 'center',
                       alignItems: 'center',
                       gap: '1rem',
-                      border: isActive ? `1px solid ${opt.color}` : `1px solid ${theme.colors.glassBorder}`,
-                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.6)',
+                      border: isActive ? `1px solid ${opt.color}` : `1px solid var(--glass-border)`,
+                      backgroundColor: isActive ? 'var(--primary-glow)' : 'var(--glass-bg)',
                       borderRadius: theme.borderRadius.lg,
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
@@ -227,9 +239,9 @@ export default function MoodPage() {
                       justifyContent: 'center',
                       fontSize: '2rem',
                     }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '2.2rem', color: isActive ? opt.color : theme.colors.outline, transition: 'color 0.3s ease' }}>{opt.icon}</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '2.2rem', color: isActive ? opt.color : 'var(--muted)', transition: 'color 0.3s ease' }}>{opt.icon}</span>
                     </div>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: isActive ? opt.color : theme.colors.muted, transition: 'color 0.3s ease' }}>{opt.label}</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: isActive ? opt.color : 'var(--muted)', transition: 'color 0.3s ease' }}>{opt.label}</span>
                   </button>
                 );
               })}
@@ -237,15 +249,15 @@ export default function MoodPage() {
 
             {/* Form Section */}
             <form onSubmit={handleSaveMood}>
-              <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.1rem', fontWeight: '500', color: theme.colors.foreground }}>What's illuminating this feeling?</label>
+              <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '1.1rem', fontWeight: '500', color: theme.colors.foreground }}>{currentTheme.id === 'night-sky' ? "What's illuminating this feeling?" : "What's behind this feeling?"}</label>
               <textarea 
                 placeholder="A brief note on your journey..." 
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 style={{ 
                   width: '100%', 
-                  background: 'rgba(15, 23, 42, 0.4)', 
-                  border: `1px solid ${theme.colors.glassBorder}`, 
+                  background: 'var(--background)', 
+                  border: `1px solid var(--glass-border)`, 
                   borderRadius: theme.borderRadius.md, 
                   padding: '1.5rem', 
                   color: theme.colors.foreground, 
@@ -261,7 +273,7 @@ export default function MoodPage() {
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
                 <button type="submit" disabled={loading} style={{ 
-                  background: 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)', 
+                  background: 'var(--primary)', 
                   border: 'none', 
                   borderRadius: '30px', 
                   padding: '1.2rem 2.5rem', 
@@ -269,7 +281,7 @@ export default function MoodPage() {
                   fontWeight: '700', 
                   fontSize: '1.1rem', 
                   cursor: 'pointer', 
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                  boxShadow: '0 10px 25px var(--primary-glow)',
                   opacity: loading ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
@@ -292,36 +304,36 @@ export default function MoodPage() {
           
           {/* Luminous Streak */}
           <div style={{ 
-            background: 'rgba(30, 41, 59, 0.3)', 
+            background: 'var(--glass-bg)', 
             backdropFilter: 'blur(20px)', 
             borderRadius: '20px', 
             padding: '2rem', 
-            border: '1px solid rgba(255,255,255,0.04)',
+            border: '1px solid var(--glass-border)',
             boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center'
           }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc', marginBottom: '1rem' }}>Luminous Streak</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '1rem' }}>{currentTheme.id === 'night-sky' ? "Luminous Streak" : "Mindful Streak"}</h3>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '4rem', fontWeight: '800', color: '#bac3ff', lineHeight: 0.9 }}>{streak}</span>
-              <span style={{ fontSize: '1rem', fontWeight: '500', color: '#94a3b8', paddingBottom: '0.4rem' }}>day{streak !== 1 ? 's' : ''} of mindful tracking</span>
+              <span style={{ fontSize: '4rem', fontWeight: '800', color: 'var(--primary)', lineHeight: 0.9 }}>{streak}</span>
+              <span style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--muted)', paddingBottom: '0.4rem' }}>day{streak !== 1 ? 's' : ''} of mindful tracking</span>
             </div>
-            <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.5' }}>
-              {streak >= 7 ? "Incredible consistency. Your inner universe is expanding." :
-               streak >= 3 ? "You're building a beautiful pattern of self-awareness. Keep shining." :
-               streak === 1 ? "A journey of a thousand stars begins with one. Well done." :
-               "Start today \u2014 every entry lights a new star."}
+            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: '1.5' }}>
+              {streak >= 7 ? (currentTheme.id === 'night-sky' ? "Incredible consistency. Your inner universe is expanding." : "Incredible consistency. Your self-awareness is growing.") :
+               streak >= 3 ? (currentTheme.id === 'night-sky' ? "You're building a beautiful pattern of self-awareness. Keep shining." : "You're building a beautiful pattern of self-awareness.") :
+               streak === 1 ? (currentTheme.id === 'night-sky' ? "A journey of a thousand stars begins with one. Well done." : "Every journey begins with a single step. Well done.") :
+               (currentTheme.id === 'night-sky' ? "Start today — every entry lights a new star." : "Start today — every entry is a step forward.")}
             </p>
           </div>
 
           {/* Daily Reflection Widget */}
           <div style={{ 
-            background: 'rgba(30, 41, 59, 0.3)', 
+            background: 'var(--glass-bg)', 
             backdropFilter: 'blur(20px)', 
             borderRadius: '20px', 
             padding: '2.5rem', 
-            border: '1px solid rgba(255,255,255,0.04)',
+            border: '1px solid var(--glass-border)',
             position: 'relative',
             overflow: 'hidden',
             display: 'flex',
@@ -331,10 +343,10 @@ export default function MoodPage() {
             boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
             flex: 1
           }}>
-            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80" alt="Nebula" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15, zIndex: 0 }} />
+            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80" alt="Nebula" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 'var(--background)' === '#f8fafc' ? 0.05 : 0.15, zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', height: '100%', justifyContent: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', color: '#f1e7ff' }}>auto_awesome</span>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f8fafc' }}>Daily Reflection</h3>
+              <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', color: 'var(--primary)' }}>auto_awesome</span>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--foreground)' }}>Daily Reflection</h3>
 
               {todayEntry ? (
                 <>
@@ -342,27 +354,27 @@ export default function MoodPage() {
                     <span className="material-symbols-outlined" style={{ fontSize: '1.4rem', color: moodOptions.find(o => o.value === todayEntry.mood)?.color || '#bac3ff' }}>
                       {moodOptions.find(o => o.value === todayEntry.mood)?.icon || 'flare'}
                     </span>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: moodOptions.find(o => o.value === todayEntry.mood)?.color || '#bac3ff' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: moodOptions.find(o => o.value === todayEntry.mood)?.color || 'var(--primary)' }}>
                       Feeling {moodOptions.find(o => o.value === todayEntry.mood)?.label || 'Unknown'} today
                     </span>
                   </div>
                   {todayEntry.note && (
-                    <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: '#d6c9ee', lineHeight: '1.6', maxHeight: '80px', overflow: 'hidden' }}>
+                    <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--muted)', lineHeight: '1.6', maxHeight: '80px', overflow: 'hidden' }}>
                       "{todayEntry.note}"
                     </p>
                   )}
                   <button 
                     onClick={() => setShowReflectionModal(true)}
-                    style={{ background: 'none', border: '1px solid rgba(186,195,255,0.3)', borderRadius: '20px', color: '#bac3ff', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
+                    style={{ background: 'none', border: '1px solid var(--glass-border)', borderRadius: '20px', color: 'var(--primary)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
                   >View Full Entry</button>
                 </>
               ) : (
                 <>
-                  <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#d6c9ee', lineHeight: '1.6' }}>{todayQuote}</p>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b' }}>No entry recorded yet today.</p>
+                  <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: 'var(--muted)', lineHeight: '1.6' }}>{todayQuote}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>No entry recorded yet today.</p>
                   <button 
                     onClick={() => document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })}
-                    style={{ background: 'none', border: '1px solid rgba(186,195,255,0.3)', borderRadius: '20px', color: '#bac3ff', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
+                    style={{ background: 'none', border: '1px solid var(--glass-border)', borderRadius: '20px', color: 'var(--primary)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', marginTop: '0.5rem', padding: '0.4rem 1.2rem' }}
                   >Record Now ↑</button>
                 </>
               )}
@@ -384,12 +396,12 @@ export default function MoodPage() {
                     </span>
                   </div>
                   <div>
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#f8fafc', margin: 0 }}>Feeling {moodOptions.find(o => o.value === todayEntry.mood)?.label}</h2>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(todayEntry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--foreground)', margin: 0 }}>Feeling {moodOptions.find(o => o.value === todayEntry.mood)?.label}</h2>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{new Date(todayEntry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
                 {todayEntry.note && (
-                  <p style={{ color: '#e2e8f0', fontSize: '1.1rem', lineHeight: '1.8', fontStyle: 'italic' }}>"{todayEntry.note}"</p>
+                  <p style={{ color: 'var(--foreground)', fontSize: '1.1rem', lineHeight: '1.8', fontStyle: 'italic' }}>"{todayEntry.note}"</p>
                 )}
                 {todayEntry.tags && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
@@ -409,37 +421,37 @@ export default function MoodPage() {
       <section style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', md: { flexDirection: 'row' }, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', gap: '1.5rem' }}>
           <div>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Your Mood Galaxy</h2>
-            <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>The constellations of your emotional history over the last {viewRange === 'weekly' ? '7' : '30'} days.</p>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>{currentTheme?.copy?.moodTitle || 'Mood Overview'}</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>{currentTheme.id === 'night-sky' ? `The constellations of your emotional history over the last ${viewRange === 'weekly' ? '7' : '30'} days.` : `An overview of your emotional history over the last ${viewRange === 'weekly' ? '7' : '30'} days.`}</p>
           </div>
-          <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '30px', padding: '0.3rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', background: 'var(--glass-bg)', borderRadius: '30px', padding: '0.3rem', border: '1px solid var(--glass-border)' }}>
             <button 
               onClick={() => setViewRange('monthly')}
               style={{ 
-                background: viewRange === 'monthly' ? 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)' : 'none', 
-                color: viewRange === 'monthly' ? '#fff' : '#94a3b8', 
+                background: viewRange === 'monthly' ? 'var(--primary)' : 'none', 
+                color: viewRange === 'monthly' ? '#fff' : 'var(--muted)', 
                 border: 'none', 
                 borderRadius: '20px', 
                 padding: '0.6rem 1.8rem', 
                 fontSize: '0.85rem', 
                 fontWeight: '700', 
                 cursor: 'pointer', 
-                boxShadow: viewRange === 'monthly' ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
+                boxShadow: viewRange === 'monthly' ? 'var(--glass-shadow)' : 'none',
                 transition: 'all 0.3s ease'
               }}
             >Monthly</button>
             <button 
               onClick={() => setViewRange('weekly')}
               style={{ 
-                background: viewRange === 'weekly' ? 'linear-gradient(135deg, #3c4b9e 0%, #293676 100%)' : 'none', 
-                color: viewRange === 'weekly' ? '#fff' : '#94a3b8', 
+                background: viewRange === 'weekly' ? 'var(--primary)' : 'none', 
+                color: viewRange === 'weekly' ? '#fff' : 'var(--muted)', 
                 border: 'none', 
                 borderRadius: '20px', 
                 padding: '0.6rem 1.8rem', 
                 fontSize: '0.85rem', 
                 fontWeight: '700', 
                 cursor: 'pointer',
-                boxShadow: viewRange === 'weekly' ? '0 4px 15px rgba(0,0,0,0.3)' : 'none',
+                boxShadow: viewRange === 'weekly' ? 'var(--glass-shadow)' : 'none',
                 transition: 'all 0.3s ease'
               }}
             >Weekly</button>
@@ -448,17 +460,17 @@ export default function MoodPage() {
 
         {/* Canvas Area */}
         <div style={{ 
-          background: 'rgba(15, 23, 42, 0.4)', 
+          background: 'var(--glass-bg)', 
           backdropFilter: 'blur(20px)', 
           borderRadius: '24px', 
-          border: '1px solid rgba(255,255,255,0.04)',
+          border: '1px solid var(--glass-border)',
           minHeight: '450px',
           position: 'relative',
-          overflow: 'hidden',
+          overflow: 'visible',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
+          boxShadow: 'var(--glass-shadow)',
         }}>
           {/* Central Glow Orb */}
           <div style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(186,195,255,0.05)', filter: 'blur(80px)', zIndex: 0 }}></div>
@@ -467,7 +479,7 @@ export default function MoodPage() {
           <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}>
             {recentEntries.length === 0 ? (
               <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: '#64748b', fontStyle: 'italic' }}>Record your first star to ignite your galaxy.</p>
+                <p style={{ color: '#64748b', fontStyle: 'italic' }}>{currentTheme.id === 'night-sky' ? 'Record your first star to ignite your galaxy.' : 'Record your first mood to begin your map.'}</p>
               </div>
             ) : (
               recentEntries.map((entry, idx) => {
@@ -508,14 +520,15 @@ export default function MoodPage() {
                     }}></div>
                     <span style={{ 
                       fontSize: '0.7rem', 
-                      color: '#bac3ff', 
-                      background: 'rgba(0,0,0,0.4)', 
+                      color: 'var(--primary)', 
+                      background: 'var(--glass-bg)', 
                       padding: '0.2rem 0.5rem', 
                       borderRadius: '6px', 
                       backdropFilter: 'blur(10px)', 
-                      border: '1px solid rgba(255,255,255,0.05)',
+                      border: '1px solid var(--glass-border)',
                       opacity: hoveredEntry === entry ? 0 : 1, // Hide date when tooltip shown
-                      transition: 'opacity 0.2s'
+                      transition: 'opacity 0.2s',
+                      fontWeight: '700'
                     }}>
                       {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
@@ -528,13 +541,13 @@ export default function MoodPage() {
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '240px',
-                        background: 'rgba(11, 13, 24, 0.9)',
+                        background: 'var(--background)',
                         backdropFilter: 'blur(20px)',
                         borderRadius: '20px',
                         padding: '1.2rem',
-                        border: `1px solid ${opt.color}44`,
-                        boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${opt.glow}22`,
-                        zIndex: 100,
+                        border: `1px solid ${opt.color}66`,
+                        boxShadow: `var(--glass-shadow), 0 0 20px ${opt.glow}22`,
+                        zIndex: 1000,
                         animation: 'tooltipPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                         pointerEvents: 'none'
                       }}>
@@ -548,8 +561,8 @@ export default function MoodPage() {
                           </span>
                         </div>
                         
-                        <p style={{ fontSize: '0.9rem', color: '#f1f5f9', lineHeight: '1.5', margin: 0, fontStyle: entry.note ? 'normal' : 'italic' }}>
-                          {entry.note ? `"${entry.note}"` : "No reflection recorded for this star."}
+                        <p style={{ fontSize: '0.9rem', color: 'var(--foreground)', lineHeight: '1.5', margin: 0, fontStyle: entry.note ? 'normal' : 'italic' }}>
+                          {entry.note ? `"${entry.note}"` : (currentTheme.id === 'night-sky' ? "No reflection recorded for this star." : "No reflection recorded for this entry.")}
                         </p>
                         
                         {entry.tags && (
@@ -572,7 +585,7 @@ export default function MoodPage() {
                           height: 0,
                           borderLeft: '8px solid transparent',
                           borderRight: '8px solid transparent',
-                          borderTop: `8px solid rgba(11, 13, 24, 0.9)`
+                          borderTop: `8px solid var(--background)`
                         }}></div>
                       </div>
                     )}
@@ -583,18 +596,18 @@ export default function MoodPage() {
 
             {/* Connection Paths Mock */}
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.15, zIndex: 0 }}>
-               <path d="M250,150 Q450,50 650,300 T850,200" fill="none" stroke="#bac3ff" strokeWidth="1" strokeDasharray="4,6" />
-               <path d="M150,350 Q350,400 550,250 T750,100" fill="none" stroke="#f1e7ff" strokeWidth="1" strokeDasharray="3,8" />
+               <path d="M250,150 Q450,50 650,300 T850,200" fill="none" stroke="var(--primary)" strokeWidth="1" strokeDasharray="4,6" />
+               <path d="M150,350 Q350,400 550,250 T750,100" fill="none" stroke="var(--primary-glow)" strokeWidth="1" strokeDasharray="3,8" />
             </svg>
           </div>
 
           {/* Central Report Floating text */}
-          <div style={{ position: 'absolute', zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-            <div style={{ color: '#bac3ff', opacity: 0.3, marginBottom: '0.5rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '4rem' }}>blur_on</span>
+          <div style={{ position: 'absolute', zIndex: 0, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+            <div style={{ color: 'var(--primary)', opacity: 0.6, marginBottom: '0.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '4rem' }}>{currentTheme.id === 'night-sky' ? 'blur_on' : 'insights'}</span>
             </div>
-            <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.5rem' }}>Steady Ascension</h4>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: '300px', margin: '0 auto', lineHeight: '1.5' }}>This month shows a consistent trend toward 'Calm'. Your reflections are anchoring your energy.</p>
+            <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '0.5rem' }}>Steady Ascension</h4>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', maxWidth: '300px', margin: '0 auto', lineHeight: '1.5' }}>{currentTheme.id === 'night-sky' ? "This month shows a consistent trend toward 'Calm'. Your reflections are anchoring your energy." : "Your emotional data shows a consistent trend toward stability and inner calm."}</p>
           </div>
 
           {/* Legend */}
@@ -602,7 +615,7 @@ export default function MoodPage() {
              {moodOptions.map(opt => (
                <div key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: opt.color, boxShadow: `0 0 10px ${opt.color}` }}></div>
-                 <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#94a3b8', fontWeight: '700' }}>{opt.label}</span>
+                 <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)', fontWeight: '700' }}>{opt.label}</span>
                </div>
              ))}
           </div>

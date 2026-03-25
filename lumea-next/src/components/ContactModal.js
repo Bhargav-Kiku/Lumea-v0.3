@@ -41,8 +41,8 @@ export default function ContactModal({ isOpen, onClose }) {
         padding: '2.5rem',
         position: 'relative',
         animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        background: 'rgba(13, 14, 21, 0.95)',
-        border: '1px solid rgba(168, 85, 247, 0.2)'
+        background: 'var(--background)',
+        border: '1px solid var(--glass-border)'
       }}>
         <button 
           onClick={onClose}
@@ -52,7 +52,7 @@ export default function ContactModal({ isOpen, onClose }) {
             right: '1.5rem',
             background: 'none',
             border: 'none',
-            color: '#94a3b8',
+            color: 'var(--muted)',
             cursor: 'pointer',
             fontSize: '1.5rem'
           }}
@@ -62,12 +62,12 @@ export default function ContactModal({ isOpen, onClose }) {
 
         <header style={{ marginBottom: '2rem' }}>
           <h2 className="text-gradient" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Reach Out to the Stars</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Have a question or feedback? Share your thoughts with the Lumea team.</p>
+          <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>Have a question or feedback? Share your thoughts with the Lumea team.</p>
         </header>
 
         <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label style={{ display: 'block', color: '#f8fafc', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600' }}>Subject</label>
+            <label style={{ display: 'block', color: 'var(--foreground)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600' }}>Subject</label>
             <input 
               required
               type="text" 
@@ -77,20 +77,20 @@ export default function ContactModal({ isOpen, onClose }) {
               style={{
                 width: '100%',
                 padding: '0.8rem 1rem',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--background)',
+                border: '1px solid var(--glass-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--foreground)',
                 outline: 'none',
                 transition: 'border-color 0.2s'
               }}
-              onFocus={e => e.currentTarget.style.borderColor = '#a855f7'}
-              onBlur={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', color: '#f8fafc', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600' }}>Your Message</label>
+            <label style={{ display: 'block', color: 'var(--foreground)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600' }}>Your Message</label>
             <textarea 
               required
               rows="5"
@@ -100,16 +100,16 @@ export default function ContactModal({ isOpen, onClose }) {
               style={{
                 width: '100%',
                 padding: '0.8rem 1rem',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--background)',
+                border: '1px solid var(--glass-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--foreground)',
                 outline: 'none',
                 resize: 'none',
                 transition: 'border-color 0.2s'
               }}
-              onFocus={e => e.currentTarget.style.borderColor = '#a855f7'}
-              onBlur={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
             ></textarea>
           </div>
 

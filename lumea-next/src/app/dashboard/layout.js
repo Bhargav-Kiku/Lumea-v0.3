@@ -3,7 +3,6 @@
 import Sidebar from '@/components/Sidebar';
 import ProfileMenu from '@/components/ProfileMenu';
 import ContactModal from '@/components/ContactModal';
-import SkyBackground from '@/components/SkyBackground';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,7 +36,7 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#020617', color: '#94a3b8' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'transparent', color: '#94a3b8' }}>
         <p style={{ fontSize: '1.2rem', userSelect: 'none' }}>Loading Sanctuary...</p>
       </div>
     );
@@ -47,8 +46,7 @@ export default function DashboardLayout({ children }) {
   
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Global Components */}
-      <SkyBackground />
+      {/* Global Components handled by root layout (DynamicBackground) */}
       <ProfileMenu />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
@@ -69,3 +67,4 @@ export default function DashboardLayout({ children }) {
     </div>
   );
 }
+
