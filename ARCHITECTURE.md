@@ -32,9 +32,9 @@ flowchart TD
     
     %% External Systems
     subgraph External_Intelligence [External Services]
-        Ext1[{{Supabase Backend}}]
-        Ext2[{{Groq Llama-3.3 API}}]
-        Ext3[{{HF DistilRoBERTa}}]
+        Ext1{{"Supabase Backend"}}
+        Ext2{{"Groq Llama-3.3 API"}}
+        Ext3{{"HF DistilRoBERTa"}}
     end
     
     %% Guest flows
@@ -87,7 +87,7 @@ flowchart LR
     %% Flow
     Client -->|1. Raw User Input| RL
     RL -->|2. Under 100 msg/day| SF
-    SF -->|3. Safe Input (No crisis)| EmoAPI
+    SF -->|3. Safe Input - No crisis| EmoAPI
     SF -.->|3b. Crisis Detected| Client
     
     EmoAPI -->|4. Text payload| HF
@@ -109,7 +109,7 @@ Highlights the modular decomposition of the architecture from the interface down
 ```mermaid
 flowchart TD
     %% Layers
-    subgraph Presentation_Layer [Presentation Layer (Client)]
+    subgraph Presentation_Layer [Presentation Layer - Client]
         direction LR
         UI["Glassmorphism UI Elements"]
         Theme["Vanilla CSS <br/> HSL Tokens"]
@@ -117,7 +117,7 @@ flowchart TD
         Hooks["React Hooks <br/> (useChat, useAuth)"]
     end
 
-    subgraph Application_Layer [Application Layer (Next.js Node Server)]
+    subgraph Application_Layer [Application Layer - Next.js Node Server]
         direction LR
         API_Chat["/api/chat Route"]
         API_Emo["/api/emotion Route"]
