@@ -1,72 +1,113 @@
 # Lumea - AI Mental Health Companion 🌙
 
-**Lumea** is a high-fidelity, empathetic, and supportive AI-powered mental health companion. Designed as a "Celestial Sanctuary," it provides a safe, judgment-free space for emotional processing, mood tracking, and mindful reflection.
+**Lumea** is a high-fidelity, empathetic, and supportive AI-powered mental health companion. Designed as a "Celestial Sanctuary," it provides a safe, judgment-free space for emotional processing, mood tracking, and mindful reflection. By leveraging ultra-fast Large Language Models and specialized NLP emotion classifiers, Lumea simulates the cadence and care of a reflective conversation.
+
+> [!IMPORTANT]
+> Lumea is an experimental AI companion designed for reflection, not clinical therapy. If you are experiencing a crisis, please reach out to professional emergency services. Lumea includes built-in safety halts to redirect distressed users to appropriate resources.
 
 ---
 
-## ✨ The Celestial Sanctuary Experience
-Lumea has been completely reimagined with a **Glassmorphism Design System** and a modular architecture.
+## ✨ Features: The Celestial Sanctuary
 
-### 🏠 Features:
-- **💬 Empathic Chat**: Real-time streaming AI conversation with human-like typing animations.
-- **🎭 Emotion Detection**: Dynamic analysis of your input using state-of-the-art NLP.
-- **🌌 Mood Tracker**: Visualize your emotional journey in the "Mood Galaxy."
-- **📓 Lunar Journal**: A private space for deep reflection and long-form writing.
-- **🫁 Breath Sync**: Interactive breathing exercises with rhythmic celestial visuals.
-- **🧘 Mindset Reframe**: Cognitive behavioral tools to help you identify and challenge negative thoughts.
+Lumea has been completely reimagined with a **Glassmorphism Design System**, utilizing deep, calming HSL aesthetics and a highly modular architecture.
 
----
+### Core Modules
 
-## 🚀 Technical Stack (Modernized)
+* **💬 Empathic Chat Engine** 
+  * Real-time streaming AI conversation.
+  * Custom 2-second "Reflection Loop" typing animations to introduce a calming, human-like tempo.
+  * Context-aware memory across active sessions.
 
-### Frontend & Core
-- **Next.js 16 (App Router)**: High-performance React framework.
-- **Vanilla CSS (Glassmorphism)**: Custom-built design system with HSL-based thematic tokens.
-- **Lucide Icons & Material Symbols**: Sleek, modern visual language.
+* **🎭 Dynamic Emotion Detection**
+  * Seamless, parallel analysis of user input using state-of-the-art NLP models.
+  * Sentiment tagged on user messages in real-time (e.g., *😊 Joy*, *😢 Sadness*).
 
-### Intelligence & API
-- **Groq API (Llama 3.3 70B)**: Ultra-fast, empathetic AI response generation.
-- **Hugging Face Inference**: Real-time emotion classification using `DistilRoBERTa`.
-- **Typing Engine**: Custom 2-second "Reflection" delay for realistic pacing.
+* **🌌 Mood Galaxy Tracker**
+  * Visualize your emotional journey on a temporal axis.
+  * Log daily energy/valence states to discover underlying emotional patterns.
 
-### Persistence & Security
-- **Supabase Cloud**: Real-time database and secure authentication.
-- **Safety Shield**: 100+ phrase distress detection library with immediate halt mechanism.
-- **Rate Limiting**: Integrated "Daily Spirit" tracker (100 messages/day).
+* **📓 Lunar Journal & 🧘 Mindset Reframe**
+  * A private, encrypted space for deep reflection and long-form writing.
+  * Built-in Cognitive Behavioral Therapy (CBT) guides to help you identify cognitive distortions and practice positive reframing.
+
+* **🫁 Breath Sync Exercises**
+  * Interactive, visually-guided breathing exercises aligned with rhythmic celestial aesthetics to lower immediate anxiety.
 
 ---
 
-## 🛠️ Setup & Installation
+## 🚀 Technical Stack Matrix
+
+Our modernized stack prioritizes speed, security, and developer ergonomics.
+
+| Domain | Technology | Purpose & Rationale |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **Next.js 16 (App Router)** | Provides high-performance React rendering, optimized layouts, and easy integration of Server Actions for our API suite. |
+| **Design System** | **Glassmorphism (Vanilla CSS)** | Custom-built UI using HSL thematic tokens for frosted glass effects, avoiding heavy UI libraries for raw performance. |
+| **Iconography** | **Lucide & Material Symbols** | Sleek, modern visual language. |
+| **Language Model Core** | **Groq API (Llama 3.3 70B)** | Chosen for its unprecedented tokens-per-second, enabling ultra-fast, empathetic response generation. |
+| **NLP Feature Extraction**| **HF Inference Serverless** | Uses `DistilRoBERTa` for zero-shot text classification, securely predicting emotion layers synchronously. |
+| **Backend & Persistence** | **Supabase Cloud** | Provides blazing-fast PostgreSQL database access, Row Level Security (RLS), and secure JWT Authentication. |
+
+---
+
+## 🛡️ Security & Boundaries
+
+We place a high premium on digital wellness and user safety.
+1. **Safety Shield (100+ Phrases)**: Immediate browser-level detection of distressed language. Terminates API requests and presents a safety card.
+2. **Daily Spirit Limit (Rate Limiting)**: Caps interactions at 100 messages/day to prevent unhealthy AI dependence or circular rumination.
+3. **Data Privacy**: End-to-end user isolation powered by Supabase Row-Level Security.
+
+---
+
+## 🛠️ Setup & Installation Guide
+
+Follow these steps to deploy your local instance of the Celestial Sanctuary.
 
 ### 1. Prerequisites
-- Node.js 18+
-- Supabase Project URL & Keys
-- Groq & Hugging Face API Keys
+- **Node.js**: v18.0 or higher.
+- **Supabase**: A free Supabase Project (Database URL & Anon Key).
+- **Groq API**: An active Groq API Key for the Llama model.
+- **Hugging Face**: An active Access Token for the Inference API.
 
-### 2. Installation
-Navigate to the project directory and install dependencies:
+### 2. Standard Installation
+Navigate to the frontend directory and install the necessary dependencies:
 ```bash
 cd lumea-next
 npm install
 ```
 
 ### 3. Environment Configuration
-Create a `.env.local` file in the `lumea-next` folder (see `.env.example` for reference).
+Create a `.env.local` file at the root of `lumea-next`. Map the required variables:
 
-### 4. Launch the Sanctuary
+```properties
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Intelligence Configuration
+GROQ_API_KEY=your_groq_api_key
+HUGGINGFACE_API_KEY=your_hf_access_token
+```
+
+### 4. Database Schema
+Execute the initial SQL tables via the Supabase SQL Editor. *(Refer to the ERD in `ARCHITECTURE.md` for schema layout)*. You will need to create the `users`, `chat_sessions`, `chat_messages`, `journal_entries`, and `mood_logs` tables.
+
+### 5. Launch the Sanctuary
+Start the Next.js development server:
 ```bash
 npm run dev
 ```
-Visit http://localhost:3000 to enter the sanctuary.
+Visit `http://localhost:3000` to enter the sanctuary.
 
 ---
 
 ## 📐 System Architecture
-For technical diagrams (Use Case, DFD, Layered Architecture), please refer to the [System Architecture Document](ARCHITECTURE.md).
+
+For extremely detailed technical mapping—including **Use Case, Data Flow (DFD), System Architecture, Sequence Flow, and ERD Diagrams**—please refer to the [System Architecture Document](ARCHITECTURE.md).
 
 ---
 
-## 👥 Team
+## 👥 Contributors
 - Bhargav Kikani
 - Yash Rank
 - Jenil Gandhi

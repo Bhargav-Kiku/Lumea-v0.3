@@ -1,116 +1,242 @@
 # Lumea - System Architecture & Diagrams 📐
 
-This document provides a visual and structural overview of the **Lumea - Celestial Sanctuary**, detailing user interactions, data streaming cycles, and the modern Next.js component architecture.
+This document provides a highly detailed visual and structural overview of the **Lumea - Celestial Sanctuary**. It maps out user interactions, data streaming cycles, component boundaries, and the modern Next.js architecture that powers the emotional intelligence of the platform.
 
 ---
 
 ## 👥 1. Use Case Diagram
-Describes how a user interacts with the functional modules of the sanctuary.
+This diagram illustrates the comprehensive interactions between the User, the system's core modules, and external intelligence providers.
 
 ```mermaid
 flowchart TD
+    %% Actors
     User([User 👤])
+    Guest([Unregistered Visitor 🕵️])
     
-    subgraph Lumea_App [Lumea - Celestial Sanctuary]
+    %% System Boundary
+    subgraph Lumea_Sanctuary [Lumea - Celestial Sanctuary]
         direction TB
-        UC1((🔐 Auth/Identity))
+        
+        %% Auth
+        UC1((🔐 Authentication & Profiling))
+        
+        %% Features
         UC2((🏠 Stellar Dashboard))
-        UC3((💬 Empathic Chat))
-        UC4((🌌 Mood Galaxy))
-        UC5((📓 Lunar Journal))
-        UC6((🫁 Breath Sync))
-        UC7((🧘 Mindset Reframe))
+        UC3((💬 Empathic Reflection Chat))
+        UC4((🌌 Mood Galaxy Tracker))
+        UC5((📓 Lunar Journaling))
+        UC6((🫁 Breath Sync Exercises))
+        UC7((🧘 Cognitive Reframing CBT))
+        UC8((🛡️ Safety & Crisis Halt))
     end
     
-    User --> UC1
-    User --> UC2
-    User --> UC3
-    User --> UC4
-    User --> UC5
-    User --> UC6
-    User --> UC7
+    %% External Systems
+    subgraph External_Intelligence [External Services]
+        Ext1[{{Supabase Backend}}]
+        Ext2[{{Groq Llama-3.3 API}}]
+        Ext3[{{HF DistilRoBERTa}}]
+    end
+    
+    %% Guest flows
+    Guest -.->|Views landing page| UC1
+    Guest -.->|Restricted Access| UC6
+    
+    %% User flows
+    User -->|Logs in / Signs up| UC1
+    User -->|Navigates| UC2
+    User -->|Converses| UC3
+    User -->|Logs emotion| UC4
+    User -->|Reflects deeply| UC5
+    User -->|Practice mindfulness| UC6
+    User -->|Challenges thoughts| UC7
+    User -->|Triggers implicitly| UC8
+    
+    %% System Integration
+    UC1 --- Ext1
+    UC3 --- Ext2
+    UC3 --- Ext3
+    UC4 --- Ext1
+    UC5 --- Ext1
+    UC8 --- Ext1
 ```
 
 ---
 
 ## 🔄 2. Data Flow Diagram (DFD)
-Tracks the flow of information from user input through modern Next.js server actions and API routes.
+Tracks the complex flow of information from user input through modern Next.js server actions, safety intercepts, and AI API routes.
 
 ```mermaid
 flowchart LR
-    User([User]) -->|1. Message / Emotion| App[Next.js Client]
+    %% Entities
+    Client([Next.js Client UI])
+    DB[(Supabase PostgreSQL)]
     
-    subgraph Processing_Layer [Processing & Analytics]
+    subgraph Next_Processing [Next.js API & Processing Layer]
         direction TB
-        App -->|2. Local Check| RL[Usage Tracker \n LocalStorage]
-        App -->|3. Safety Intercept| SF[Safety Library \n 100+ Phrases]
-        App -->|4. Text Analysis| HF[/api/emotion \n DistilRoBERTa]
-        HF -->|5. Emotion Score| App
-        App -->|6. GPT-Context| Groq[/api/chat \n Llama 3.3]
-        Groq -->|7. Streaming Chunks| App
+        RL["Usage Check <br/> (Daily Spirit Tracker)"]
+        SF["Safety Intercept <br/> (100+ Distress Phrases)"]
+        EmoAPI["/api/emotion <br/> (Emotion Classification)"]
+        ChatAPI["/api/chat <br/> (Contextual Generator)"]
     end
     
-    subgraph Data_Layer [Data Persistence]
-        App -->|8. Sync Data| DB[(Supabase Cloud)]
+    subgraph AI_Models [Intelligence Models]
+        HF["Hugging Face Serverless <br/> (DistilRoBERTa)"]
+        Groq["Groq Cloud <br/> (Llama 3.3 70B)"]
     end
     
-    App -->|9. Interactive UI| User
+    %% Flow
+    Client -->|1. Raw User Input| RL
+    RL -->|2. Under 100 msg/day| SF
+    SF -->|3. Safe Input (No crisis)| EmoAPI
+    SF -.->|3b. Crisis Detected| Client
+    
+    EmoAPI -->|4. Text payload| HF
+    HF -->|5. Emotion Probabilities| EmoAPI
+    EmoAPI -->|6. Append Sentiment| ChatAPI
+    
+    ChatAPI -->|7. History + Prompt| Groq
+    Groq -->|8. Streaming Response| ChatAPI
+    ChatAPI -->|9. SSE Stream chunks| Client
+    
+    Client -->|10. Finalized Exchange| DB
 ```
 
 ---
 
-## 🏛️ 3. Layered System Architecture (Next.js)
-Highlights the decomposition of the "Celestial Sanctuary" architecture.
+## 🏛️ 3. Layered System Architecture
+Highlights the modular decomposition of the architecture from the interface down to persistent storage.
 
 ```mermaid
 flowchart TD
-    subgraph Presentation_Layer [Presentation Layer]
-        UI[Glassmorphism UI]
-        Theme[theme.js \n HSL System]
-        Components[Shared: PageHeader, GlassCard]
+    %% Layers
+    subgraph Presentation_Layer [Presentation Layer (Client)]
+        direction LR
+        UI["Glassmorphism UI Elements"]
+        Theme["Vanilla CSS <br/> HSL Tokens"]
+        Pages["App Router Pages"]
+        Hooks["React Hooks <br/> (useChat, useAuth)"]
     end
 
-    subgraph Application_Layer [Application Layer - Next.js]
-        direction TB
-        AppDir[src/app \n App Router]
-        Dashboard[Dashboard / Modules]
-        API[/api/chat, /api/emotion]
-        Lib[src/lib \n Supabase, Safety]
-        
-        AppDir --> Dashboard
-        Dashboard --> API
-        Dashboard --> Lib
+    subgraph Application_Layer [Application Layer (Next.js Node Server)]
+        direction LR
+        API_Chat["/api/chat Route"]
+        API_Emo["/api/emotion Route"]
+        AuthM["Auth Middleware"]
+        Safety["Safety Utils <br/> src/lib/safetyPhrases.js"]
     end
 
-    subgraph Intelligence_Layer [Intelligence Layer]
-        Groq[Groq API \n LLM Core]
-        HF[Hugging Face \n NLP Core]
+    subgraph External_Integrations [External Integrations]
+        direction LR
+        GroqAPI["Groq Llama API"]
+        HFAPI["HF Inference Engine"]
+        SupabaseAPI["Supabase REST/Realtime"]
     end
 
-    subgraph Persistence_Layer [Persistence Layer]
-        Auth[Supabase Auth]
-        Tables[(Supabase Postgres)]
+    subgraph Data_Layer [Data & Persistence]
+        Auth[(Supabase User Auth)]
+        Data[(PostgreSQL Relational Data)]
     end
 
     %% Connectors
-    UI <--> AppDir
-    API <--> Intelligence_Layer
-    Lib <--> Persistence_Layer
+    Presentation_Layer == "Fetch / Server Actions" ==> Application_Layer
+    Application_Layer == "External Requests" ==> External_Integrations
+    External_Integrations == "Read/Write" ==> Data_Layer
 ```
 
 ---
 
-## 🧩 4. Core Logic Flows
+## 🔄 4. Sequence Diagram: The "Reflection Loop"
+This sequence diagram maps the precise conversational tick when a user sends a message. Notice the inclusion of a deliberate typographic delay to simulate human empathy.
 
-### 💬 Chat Workflow: "The Reflection Loop"
-1. **User Input**: Statement is received.
-2. **Safety Barrier**: Immediate check against `src/lib/safetyPhrases.js` (100+ phrases). If triggered, generation is suppressed, and a support card is shown.
-3. **Usage Check**: Local `lumea_usage` verifies the 100-message daily limit.
-4. **Typing Animation**: A 2-second "Reflection Delay" is triggered to provide a human-like tempo.
-5. **Emotion Tagging**: Text is sent to `/api/emotion`. The resulting sentiment (e.g., *😊 Joy*) is displayed outside the bubble.
-6. **Streaming Response**: Groq API (Llama 3.3 70B) generates an empathetic reply, streamed character-by-character into the Glassmorphism bubble.
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant C as Client (Browser)
+    participant S as Safety Engine
+    participant E as Next.js /api/emotion
+    participant HF as Hugging Face
+    participant G as Next.js /api/chat
+    participant LLM as Groq (Llama 3.3)
+    participant DB as Supabase
+    
+    U->>C: Sends message ("I feel lost today.")
+    C->>S: Validate string against safety library
+    
+    alt Crisis Detected
+        S-->>C: Halt & display crisis resources
+    else Safe
+        S-->>C: Pass
+        C->>C: Trigger 2.0s "Reflection" Delay (Typing...)
+        
+        par Feature Extraction & Response
+            C->>E: POST /api/emotion {text}
+            E->>HF: Classify sentiment
+            HF-->>E: Return [Sadness: 0.89]
+            E-->>C: Display "😢 Sadness" badge
+            
+            C->>G: POST /api/chat {history, new_msg, emotion}
+            G->>LLM: Stream prompt
+            LLM-->>G: Stream token chunks
+            G-->>C: Forward stream to UI
+        end
+        
+        C-->>U: Renders typewriter effect response
+        C->>DB: Async save (User Message + AI Response + Emotion)
+    end
+```
 
-### 🛡️ Safety & Rate Limiting
-- **100+ Phrases**: Robust detection of distressed language.
-- **Daily Spirit**: 100 message/day cap to encourage healthy digital boundaries.
-- **Immediate Halt**: Logic is baked into the browser-side handleSubmit to ensure no harmful content is processed by the AI.
+---
+
+## 🗄️ 5. Entity Relationship Schema (ERD)
+The underlying robust backend schema that powers the sanctuary's session persistence.
+
+```mermaid
+erDiagram
+    USERS ||--o{ CHAT_SESSIONS : owns
+    USERS ||--o{ JOURNAL_ENTRIES : writes
+    USERS ||--o{ MOOD_LOGS : records
+    
+    USERS {
+        uuid id PK
+        string email
+        string display_name
+        timestamp created_at
+    }
+    
+    CHAT_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        text title
+        timestamp last_updated
+    }
+    
+    CHAT_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string role "user | assistant"
+        text content
+        string detected_emotion
+        timestamp created_at
+    }
+    
+    CHAT_SESSIONS ||--o{ CHAT_MESSAGES : contains
+    
+    JOURNAL_ENTRIES {
+        uuid id PK
+        uuid user_id FK
+        text title
+        text content
+        boolean is_cbt_reframed
+        timestamp created_at
+    }
+    
+    MOOD_LOGS {
+        uuid id PK
+        uuid user_id FK
+        int energy_level "1-10"
+        int valence_level "1-10"
+        string primary_emotion
+        text optional_note
+        timestamp logged_at
+    }
+```
