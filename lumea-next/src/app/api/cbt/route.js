@@ -2,13 +2,13 @@ import { Groq } from 'groq-sdk'
 
 export async function POST(request) {
   try {
-    const { thought_text } = await request.json();
+    const { messages, trigger, automatic_thought } = await request.json();
 
-    if (!thought_text || typeof thought_text !== 'string') {
+    if (!messages || !Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ 
           status: "error",
-          error: { code: "BAD_REQUEST", message: "Missing or invalid 'thought_text' string in payload." }
+          error: { code: "BAD_REQUEST", message: "Missing or invalid 'messages' array in payload." }
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
@@ -27,31 +27,37 @@ export async function POST(request) {
 
     const groq = new Groq({ apiKey });
 
-    const systemPrompt = 
-      "You are Lumea, an empathetic AI mental health companion trained in automated CBT (Cognitive Behavioral Therapy). " +
-      "Analyze the thought below to identify if it matches a common Cognitive Distortion.\n\n" +
-      "Common Distortions:\n" +
-      "- Catastrophizing: Assuming the worst-case scenario.\n" +
-      "- All-or-Nothing Thinking: Seeing things in black and white lists.\n" +
-      "- Mind Reading: Assuming you know what others are thinking.\n" +
-      "- Fortune Telling: Predicting a negative future outcome.\n" +
-      "- Should Statements: Rigid demands ('I should/must be').\n" +
-      "- Labeling: Attaching global negative terms to yourself.\n\n" +
-      "Respond in JSON format with EXACTLY these keys:\n" +
-      "{\n" +
-      '  "distortion": "Name of distortion",\n' +
-      '  "description": "1-sentence warm explanation of why this thought matches.",\n' +
-      '  "reframe_prompt": "1-sentence supportive question guiding the user to challenge it."\n' +
-      "}";
+    const systemPrompt = `You are Lumea, an empathetic AI mental health companion trained in Cognitive Behavioral Therapy (CBT).
+Your goal is to guide the user through Socratic questioning to help them challenge and reframe their negative automatic thoughts.
+
+Context of the user's situation:
+Trigger: "${trigger || 'Unknown'}"
+Initial Automatic Thought: "${automatic_thought || 'Unknown'}"
+
+Instructions:
+1. Act as a compassionate, validating therapist.
+2. Ask gently probing questions (Socratic dialogue) to help the user evaluate the evidence for their thought, consider alternative perspectives, or de-catastrophize.
+3. Keep your replies concise (2-4 sentences max). Do NOT preach or just give them the answer. Ask ONE question at a time.
+4. Identify if their thought matches common Cognitive Distortions (e.g., Catastrophizing, All-or-Nothing, Mind Reading, Fortune Telling, Should Statements, Labeling, Emotional Reasoning, Mental Filter, Disqualifying the Positive).
+5. ALWAYS respond in valid JSON format with exactly these two keys:
+{
+  "reply": "Your conversational response here",
+  "detected_distortion": "Name of the distortion if identified, otherwise null"
+}`;
+
+    const apiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }))
+    ];
 
     const chatCompletion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Automatic Thought: "${thought_text}"` }
-      ],
-      temperature: 0.3,
-      max_tokens: 200,
+      messages: apiMessages,
+      temperature: 0.5,
+      max_tokens: 300,
       response_format: { type: "json_object" }
     });
 

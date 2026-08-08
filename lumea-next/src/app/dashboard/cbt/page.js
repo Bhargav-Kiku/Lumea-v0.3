@@ -1,45 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { theme } from '@/lib/theme';
 import PageHeader from '@/components/PageHeader';
 import GlassCard from '@/components/GlassCard';
 
 export default function MindsetReframePage() {
+  const [step, setStep] = useState(1);
+  const [moodBefore, setMoodBefore] = useState(3);
+  const [moodAfter, setMoodAfter] = useState(3);
   const [trigger, setTrigger] = useState('');
   const [automaticThought, setAutomaticThought] = useState('');
+  
+  const [messages, setMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState(null);
+  const [detectedDistortion, setDetectedDistortion] = useState(null);
+  
   const [reframeInput, setReframeInput] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleAnalyzeThought = async (e) => {
-    e.preventDefault();
-    if (!automaticThought.trim()) return;
+  const chatEndRef = useRef(null);
 
+  useEffect(() => {
+    if (step === 3 && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, step]);
+
+  const startChat = async () => {
+    if (!automaticThought.trim()) return;
+    setStep(3);
     setLoading(true);
-    setAnalysis(null);
-    setReframeInput('');
-    setMessage('');
+    
+    // Initial system prompt implicitly handles the context, we just send a starting message
+    const initialMsgs = [{ role: 'user', content: 'I want to reframe this thought.' }];
+    
+    try {
+      const response = await fetch('/api/cbt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: initialMsgs,
+          trigger,
+          automatic_thought: automaticThought
+        })
+      });
+
+      const data = await response.json();
+      setMessages([...initialMsgs, { role: 'assistant', content: data.reply }]);
+      if (data.detected_distortion) {
+        setDetectedDistortion(data.detected_distortion);
+      }
+    } catch (err) {
+      console.error("CBT API Error:", err);
+      setMessages([...initialMsgs, { role: 'assistant', content: "I'm here to help. What makes you feel this way?" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || loading) return;
+
+    const userMsg = { role: 'user', content: chatInput };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setChatInput('');
+    setLoading(true);
 
     try {
       const response = await fetch('/api/cbt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ thought_text: automaticThought })
+        body: JSON.stringify({ 
+          messages: newMessages,
+          trigger,
+          automatic_thought: automaticThought
+        })
       });
 
       const data = await response.json();
-      setAnalysis(data);
+      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+      if (data.detected_distortion) {
+        setDetectedDistortion(data.detected_distortion);
+      }
     } catch (err) {
-      console.error("CBT Analysis Error:", err);
-      setAnalysis({
-        distortion: "Thinking Pattern",
-        description: "Your mind seems focused on this thought heavily right now.",
-        reframe_prompt: "What is one alternative, kinder way to view this situation?"
-      });
+      console.error("CBT API Error:", err);
+      setMessages([...newMessages, { role: 'assistant', content: "Could you tell me more about that?" }]);
     } finally {
       setLoading(false);
     }
@@ -54,21 +105,21 @@ export default function MindsetReframePage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const cbtContent = `**Anxious Trigger**: ${trigger || 'A situation'}\n\n**Automatic Thought**: ${automaticThought}\n\n**Detected Pattern**: ${analysis.distortion}\n\n**Alternative Reframe**: ${reframeInput}`;
+      const distortionText = detectedDistortion || 'Unidentified Pattern';
+      const cbtContent = `**Anxious Trigger**: ${trigger}\n\n**Automatic Thought**: ${automaticThought}\n\n**Detected Pattern**: ${distortionText}\n\n**Alternative Reframe**: ${reframeInput}`;
 
       const { error } = await supabase.from('journal_entries').insert({
         user_id: user ? user.id : 'guest',
-        title: `🧩 CBT Reframe: ${analysis.distortion}`,
+        title: `🧩 CBT Reframe: ${distortionText}`,
         content: cbtContent,
+        mood_before: moodBefore,
+        mood_after: moodAfter,
         is_private: true
       });
 
       if (error) throw error;
+      setStep(6); // Success step
       setMessage("✅ Thought grounded and saved to your Journal!");
-      setAnalysis(null);
-      setTrigger('');
-      setAutomaticThought('');
-      setReframeInput('');
     } catch (err) {
       console.error("Error saving CBT reframe:", err);
       setMessage("❌ Failed to save to Journal.");
@@ -77,10 +128,18 @@ export default function MindsetReframePage() {
     }
   };
 
+  // Helper for sliders
+  const moodLabels = {
+    1: "Calm / Baseline",
+    2: "Mildly Uneasy",
+    3: "Moderately Anxious",
+    4: "Highly Distressed",
+    5: "Overwhelmed / Panic"
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%', maxWidth: '42rem', margin: '0 auto', color: theme.colors.foreground, fontFamily: "'Manrope', sans-serif" }}>
       
-      {/* Decorative localized effects */}
       <div style={{
         position: 'absolute', top: '10%', right: '-10%', width: '300px', height: '300px', background: theme.colors.tertiary,
         filter: 'blur(120px)', opacity: 0.05, borderRadius: '50%', zIndex: -1
@@ -89,151 +148,254 @@ export default function MindsetReframePage() {
       <PageHeader 
         title="Mindset"
         subtitle="Reframe"
-        description="Step into the light of clarity. Let's gently explore the shadows of your thoughts and find a more balanced path."
+        description="Step into the light of clarity. Let's gently explore the shadows of your thoughts through guided reflection."
       />
 
-      {/* Step 1: Catch the Thought */}
-      <section style={{ marginBottom: '5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-          <span style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem', height: '2.5rem', 
-            borderRadius: '50%', backgroundColor: theme.colors.primaryContainer, color: theme.colors.onPrimaryContainer, fontWeight: '800' 
-          }}>1</span>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: theme.colors.foreground, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Catch the Thought</h3>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          {/* Inputs with local styles mirroring the template */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: '600', color: theme.colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.1em' }}>What triggered this anxiety/stress?</label>
-            <textarea 
-              style={{ width: '100%', backgroundColor: theme.colors.surfaceContainerHighest, border: `1px solid ${theme.colors.glassBorder}`, borderRadius: theme.borderRadius.md, padding: '1.25rem', color: theme.colors.foreground, transition: 'all 0.3s', outline: 'none' }} 
-              placeholder="e.g., A missed deadline, a difficult conversation..." 
-              rows="3"
-              value={trigger}
-              onChange={(e) => setTrigger(e.target.value)}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: '600', color: theme.colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.1em' }}>What is going through your mind? (Automatic Thought)</label>
-            <textarea 
-              style={{ width: '100%', backgroundColor: theme.colors.surfaceContainerHighest, border: `1px solid ${theme.colors.glassBorder}`, borderRadius: theme.borderRadius.md, padding: '1.25rem', color: theme.colors.foreground, transition: 'all 0.3s', outline: 'none' }} 
-              placeholder="I'm not good enough, I'll never finish this..." 
-              rows="4"
-              value={automaticThought}
-              onChange={(e) => setAutomaticThought(e.target.value)}
-              required
-            />
-          </div>
-
-          <button 
-            onClick={handleAnalyzeThought}
-            disabled={loading || !automaticThought.trim()}
-            style={{ 
-              width: '100%', padding: '1.25rem', borderRadius: '2rem', 
-              background: 'var(--primary)', color: '#fff',
-              fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer',
-              boxShadow: '0 10px 40px var(--primary-glow)', transition: 'all 0.3s',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
-            }}
-          >
-            <span className="material-symbols-outlined">{loading ? 'sync' : 'auto_awesome'}</span>
-            {loading ? 'Analyzing Thought Pattern...' : 'Analyze Thought Pattern'}
-          </button>
-        </div>
-      </section>
-
-      {/* Step 2: Reframe Perspective */}
-      <section style={{ 
-        opacity: !analysis ? 0.6 : 1, filter: !analysis ? 'grayscale(0.5)' : 'none', transition: 'all 0.6s ease',
-        marginBottom: '5rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-          <span style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem', height: '2.5rem', 
-            borderRadius: '50%', backgroundColor: analysis ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh, 
-            color: analysis ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant, fontWeight: '800' 
-          }}>2</span>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: analysis ? theme.colors.foreground : theme.colors.onSurfaceVariant, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Reframe Perspective</h3>
-        </div>
-
-        <GlassCard style={{ padding: '2rem' }}>
-          {!analysis && (
-            <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
-              <span className="material-symbols-outlined" style={{ color: 'rgba(115, 116, 133, 0.3)', fontSize: '2rem' }}>lock</span>
+      <GlassCard style={{ padding: '2rem', minHeight: '400px', transition: 'all 0.4s ease' }}>
+        
+        {/* STEP 1: PRE-MOOD */}
+        {step === 1 && (
+          <div style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: theme.colors.primary }}>1. Grounding</h3>
+            <p style={{ color: theme.colors.onSurfaceVariant, marginBottom: '2rem' }}>Before we begin, how intense is your distress right now?</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+              <span style={{ fontSize: '3rem' }}>{['😌', '🤔', '😟', '😨', '😫'][moodBefore - 1]}</span>
+              <p style={{ fontWeight: '600', color: theme.colors.primary }}>{moodLabels[moodBefore]}</p>
+              <input 
+                type="range" min="1" max="5" value={moodBefore} 
+                onChange={(e) => setMoodBefore(parseInt(e.target.value))}
+                style={{ width: '80%', cursor: 'pointer', accentColor: theme.colors.primary }}
+              />
             </div>
-          )}
-          
-          <div style={{ marginBottom: '2rem' }}>
-            <p style={{ fontSize: '0.75rem', fontWeight: '700', color: theme.colors.tertiaryDim, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1rem' }}>Analysis Preview</p>
-            {analysis ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <p style={{ color: theme.colors.primary, fontWeight: '800', fontSize: '1.25rem' }}>Detected Pattern: {analysis.distortion}</p>
-                <p style={{ color: theme.colors.onSurfaceVariant, fontStyle: 'italic', lineHeight: '1.6' }}>"{analysis.description}"</p>
-                <div style={{ 
-                  display: 'flex', alignItems: 'start', gap: '0.75rem', color: 'var(--primary)', 
-                  backgroundColor: 'var(--primary-glow)', padding: '1.25rem', borderRadius: theme.borderRadius.md, border: `1px solid var(--glass-border)` 
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '1.25rem' }}>lightbulb</span>
-                  <p style={{ fontSize: '0.9rem', fontStyle: 'italic', lineHeight: '1.5' }}>{analysis.reframe_prompt}</p>
-                </div>
+
+            <button onClick={() => setStep(2)} style={primaryBtnStyle}>Next Step <span className="material-symbols-outlined">arrow_forward</span></button>
+          </div>
+        )}
+
+        {/* STEP 2: CATCH THE THOUGHT */}
+        {step === 2 && (
+          <div style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: theme.colors.primary }}>2. Catch the Thought</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={labelStyle}>What triggered this anxiety/stress?</label>
+                <textarea 
+                  style={inputStyle} placeholder="e.g., A missed deadline, a difficult conversation..." rows="2"
+                  value={trigger} onChange={(e) => setTrigger(e.target.value)}
+                />
               </div>
-            ) : (
-              <p style={{ color: theme.colors.onSurfaceVariant, fontStyle: 'italic' }}>
-                Complete step one to illuminate the cognitive patterns within your thoughts.
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={labelStyle}>What is the specific thought going through your mind?</label>
+                <textarea 
+                  style={inputStyle} placeholder="e.g., I'm not good enough, everything is ruined..." rows="3"
+                  value={automaticThought} onChange={(e) => setAutomaticThought(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setStep(1)} style={secondaryBtnStyle}>Back</button>
+              <button onClick={startChat} disabled={!automaticThought.trim() || loading} style={primaryBtnStyle}>
+                {loading ? 'Analyzing...' : 'Explore This Thought'} <span className="material-symbols-outlined">psychology</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: SOCRATIC CHAT */}
+        {step === 3 && (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', animation: 'fadeIn 0.5s ease-in-out' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: theme.colors.primary }}>3. Reflection</h3>
+              {detectedDistortion && (
+                <div style={{ padding: '0.4rem 0.8rem', backgroundColor: 'var(--primary-glow)', border: '1px solid var(--primary)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>warning</span>
+                  {detectedDistortion} Detected
+                </div>
+              )}
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+              {messages.map((msg, idx) => (
+                <div key={idx} style={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                  <div style={{ 
+                    padding: '1rem', 
+                    borderRadius: '1rem', 
+                    backgroundColor: msg.role === 'user' ? theme.colors.primaryContainer : theme.colors.surfaceContainerHighest,
+                    color: msg.role === 'user' ? theme.colors.onPrimaryContainer : theme.colors.foreground,
+                    borderBottomRightRadius: msg.role === 'user' ? '0.2rem' : '1rem',
+                    borderBottomLeftRadius: msg.role === 'assistant' ? '0.2rem' : '1rem',
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div style={{ alignSelf: 'flex-start', padding: '1rem', color: theme.colors.onSurfaceVariant }}>
+                  <span className="material-symbols-outlined" style={{ animation: 'spin 2s linear infinite' }}>sync</span>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+              <input 
+                type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Type your response..."
+                style={{ flex: 1, ...inputStyle, padding: '1rem' }}
+                disabled={loading}
+              />
+              <button type="submit" disabled={loading || !chatInput.trim()} style={{ ...primaryBtnStyle, width: 'auto', padding: '0 1.5rem' }}>
+                <span className="material-symbols-outlined">send</span>
+              </button>
+            </form>
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: `1px solid ${theme.colors.glassBorder}`, paddingTop: '1rem' }}>
+              <button onClick={() => setStep(4)} style={{ ...secondaryBtnStyle, width: '100%', borderColor: theme.colors.primary, color: theme.colors.primary }}>
+                I'm Ready to Reframe <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: REFRAME */}
+        {step === 4 && (
+          <div style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: theme.colors.primary }}>4. The Reframe</h3>
+            <p style={{ color: theme.colors.onSurfaceVariant, marginBottom: '2rem' }}>Based on our discussion, how can you look at this situation in a more balanced, realistic way?</p>
+            
+            <textarea 
+              style={{ ...inputStyle, minHeight: '120px', marginBottom: '2rem' }} 
+              placeholder="Write your new, balanced perspective here..." 
+              value={reframeInput} onChange={(e) => setReframeInput(e.target.value)}
+            />
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setStep(3)} style={secondaryBtnStyle}>Back to Chat</button>
+              <button onClick={() => setStep(5)} disabled={!reframeInput.trim()} style={primaryBtnStyle}>
+                Next <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: POST-MOOD */}
+        {step === 5 && (
+          <div style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: theme.colors.primary }}>5. Reflection</h3>
+            <p style={{ color: theme.colors.onSurfaceVariant, marginBottom: '2rem' }}>Check in with yourself again. How intense is your distress now?</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+              <span style={{ fontSize: '3rem' }}>{['😌', '🤔', '😟', '😨', '😫'][moodAfter - 1]}</span>
+              <p style={{ fontWeight: '600', color: theme.colors.primary }}>{moodLabels[moodAfter]}</p>
+              <input 
+                type="range" min="1" max="5" value={moodAfter} 
+                onChange={(e) => setMoodAfter(parseInt(e.target.value))}
+                style={{ width: '80%', cursor: 'pointer', accentColor: theme.colors.primary }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setStep(4)} style={secondaryBtnStyle}>Back</button>
+              <button onClick={handleSaveReframe} disabled={saveLoading} style={primaryBtnStyle}>
+                <span className="material-symbols-outlined">save</span>
+                {saveLoading ? 'Saving...' : 'Save & Ground'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: SUCCESS */}
+        {step === 6 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', animation: 'fadeIn 0.5s ease-in-out', textAlign: 'center' }}>
+            <div style={{ width: '4rem', height: '4rem', borderRadius: '50%', backgroundColor: theme.colors.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: theme.colors.primary }}>check_circle</span>
+            </div>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem', color: theme.colors.primary }}>Perspective Shifted</h3>
+            <p style={{ color: theme.colors.onSurfaceVariant, marginBottom: '2rem' }}>Your new, balanced perspective has been securely saved to your journal.</p>
+            {moodBefore > moodAfter && (
+              <p style={{ color: theme.colors.secondary, fontWeight: '700', marginBottom: '2rem' }}>
+                You reduced your distress level from {moodBefore} to {moodAfter}. Great job!
               </p>
             )}
+            <button onClick={() => {
+              setStep(1); setTrigger(''); setAutomaticThought(''); setMessages([]); setReframeInput(''); setDetectedDistortion(null); setMoodBefore(3); setMoodAfter(3);
+            }} style={secondaryBtnStyle}>
+              Start Another Reflection
+            </button>
           </div>
+        )}
 
-          <div style={{ borderTop: `1px solid ${theme.colors.glassBorder}`, paddingTop: '2rem', opacity: analysis ? 1 : 0.5 }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: theme.colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>Your Balanced Perspective</label>
-            {analysis ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <textarea 
-                  style={{ width: '100%', backgroundColor: theme.colors.surfaceContainerHighest, border: 'none', borderRadius: theme.borderRadius.md, padding: '1.25rem', color: theme.colors.foreground, outline: 'none' }} 
-                  placeholder="Try to reframe: 'It's a challenge, but I've handled tight spots before...'" 
-                  rows="4"
-                  value={reframeInput}
-                  onChange={(e) => setReframeInput(e.target.value)}
-                  required
-                />
-                <button 
-                  onClick={handleSaveReframe}
-                  disabled={saveLoading || !reframeInput.trim()}
-                  style={{ 
-                    width: '100%', padding: '1.25rem', borderRadius: '2rem', backgroundColor: 'var(--primary)', 
-                    color: '#fff', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer',
-                    transition: 'all 0.3s', boxShadow: '0 10px 30px var(--primary-glow)'
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }}>save</span>
-                  {saveLoading ? 'Grounding Thought...' : 'Save Reframe & Ground'}
-                </button>
-              </div>
-            ) : (
-              <div style={{ width: '100%', height: '8rem', backgroundColor: 'var(--glass-bg)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--glass-border)' }}>
-                <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Awaiting analysis...</span>
-              </div>
-            )}
-          </div>
-        </GlassCard>
-      </section>
+      </GlassCard>
 
-      {message && (
-        <div style={{ textAlign: 'center', padding: '1.5rem', backgroundColor: 'rgba(186, 195, 255, 0.1)', borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.glassBorder}`, marginBottom: '4rem' }}>
-          <p style={{ color: theme.colors.primary, fontWeight: '700' }}>{message}</p>
-        </div>
-      )}
-
-      {/* Decorative Quote */}
-      <section style={{ padding: '2rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.5rem' }}>
-        <div style={{ width: '3rem', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(186, 195, 255, 0.3), transparent)' }}></div>
-        <blockquote style={{ fontSize: '1.25rem', fontWeight: '800', fontStyle: 'italic', color: theme.colors.tertiary, maxWidth: '24rem', lineHeight: '1.4', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          "The moon does not fight the shadows; it simply glows through them."
-        </blockquote>
-        <div style={{ width: '3rem', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(186, 195, 255, 0.3), transparent)' }}></div>
-      </section>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
+
+// Reusable Styles
+const inputStyle = {
+  width: '100%', 
+  backgroundColor: 'var(--surface-container-highest, rgba(30, 30, 40, 0.5))', 
+  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.1))', 
+  borderRadius: '0.75rem', 
+  padding: '1rem', 
+  color: 'inherit', 
+  outline: 'none',
+  transition: 'border-color 0.3s'
+};
+
+const labelStyle = {
+  fontSize: '0.8rem', 
+  fontWeight: '600', 
+  color: 'var(--on-surface-variant, #a0a0b0)', 
+  textTransform: 'uppercase', 
+  letterSpacing: '0.1em'
+};
+
+const primaryBtnStyle = {
+  flex: 1,
+  padding: '1rem', 
+  borderRadius: '2rem', 
+  background: 'var(--primary, #6b8afc)', 
+  color: '#fff',
+  fontWeight: '700', 
+  fontSize: '1rem', 
+  border: 'none', 
+  cursor: 'pointer',
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  gap: '0.5rem',
+  boxShadow: '0 4px 14px var(--primary-glow, rgba(107, 138, 252, 0.3))',
+  transition: 'all 0.2s'
+};
+
+const secondaryBtnStyle = {
+  flex: 1,
+  padding: '1rem', 
+  borderRadius: '2rem', 
+  background: 'transparent',
+  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.2))',
+  color: 'var(--on-surface-variant, #a0a0b0)',
+  fontWeight: '700', 
+  fontSize: '1rem', 
+  cursor: 'pointer',
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  gap: '0.5rem',
+  transition: 'all 0.2s'
+};
