@@ -236,6 +236,6 @@ export const THEMES = {
   },
 };
 
-export const DEFAULT_THEME_ID = 'night-sky';
+export const DEFAULT_THEME_ID = 'none';
 
 export const THEME_ORDER = ['none', 'dark', 'desert', 'ocean', 'night-sky'];

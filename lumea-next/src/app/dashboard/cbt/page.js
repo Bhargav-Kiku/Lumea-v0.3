@@ -340,6 +340,17 @@ export default function MindsetReframePage() {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        button:hover:not(:disabled) {
+          transform: translateY(-3px);
+          filter: brightness(1.15);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        button:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+        button {
+          transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        }
       `}</style>
     </div>
   );
@@ -348,8 +359,8 @@ export default function MindsetReframePage() {
 // Reusable Styles
 const inputStyle = {
   width: '100%', 
-  backgroundColor: 'var(--surface-container-highest, rgba(30, 30, 40, 0.5))', 
-  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.1))', 
+  backgroundColor: 'var(--glass-bg, rgba(255, 255, 255, 0.05))', 
+  border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))', 
   borderRadius: '0.75rem', 
   padding: '1rem', 
   color: 'inherit', 
@@ -360,7 +371,7 @@ const inputStyle = {
 const labelStyle = {
   fontSize: '0.8rem', 
   fontWeight: '600', 
-  color: 'var(--on-surface-variant, #a0a0b0)', 
+  color: 'var(--muted, #a0a0b0)', 
   textTransform: 'uppercase', 
   letterSpacing: '0.1em'
 };
@@ -388,8 +399,8 @@ const secondaryBtnStyle = {
   padding: '1rem', 
   borderRadius: '2rem', 
   background: 'transparent',
-  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.2))',
-  color: 'var(--on-surface-variant, #a0a0b0)',
+  border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
+  color: 'var(--muted, #a0a0b0)',
   fontWeight: '700', 
   fontSize: '1rem', 
   cursor: 'pointer',
