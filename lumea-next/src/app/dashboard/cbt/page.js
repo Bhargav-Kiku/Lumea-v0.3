@@ -331,6 +331,42 @@ export default function MindsetReframePage() {
 
       </GlassCard>
 
+      {/* Educational Section */}
+      <section style={{ marginTop: '4rem', padding: '0 1rem', marginBottom: '4rem', animation: 'fadeIn 0.8s ease-in-out' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1.5rem', color: theme.colors.primary }}>
+          Understanding Cognitive Distortions
+        </h3>
+        <p style={{ color: 'var(--muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+          During your Reflection chat, Lumea silently analyzes your thoughts for 9 common psychological traps. Recognizing these patterns is the first step to reframing them:
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          {[
+            { name: 'Catastrophizing', desc: 'Assuming the absolute worst-case scenario will happen.' },
+            { name: 'All-or-Nothing', desc: 'Seeing things in extreme black and white without any middle ground.' },
+            { name: 'Mind Reading', desc: 'Assuming you know exactly what someone else is thinking about you.' },
+            { name: 'Fortune Telling', desc: 'Predicting a negative future outcome as an absolute fact.' },
+            { name: 'Should Statements', desc: 'Having rigid, punishing rules for how you or the world "must" behave.' },
+            { name: 'Labeling', desc: 'Attaching global negative terms to yourself based on one event.' },
+            { name: 'Emotional Reasoning', desc: 'Believing that because you feel something, it must be true.' },
+            { name: 'Mental Filter', desc: 'Focusing exclusively on one negative detail while ignoring the positive context.' },
+            { name: 'Disqualifying the Positive', desc: 'Rejecting positive experiences by insisting they "don\'t count."' }
+          ].map((distortion, idx) => (
+            <div key={idx} style={{ 
+              padding: '1.5rem', 
+              borderRadius: '1rem', 
+              backgroundColor: 'var(--glass-bg, rgba(255, 255, 255, 0.05))',
+              border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              cursor: 'default'
+            }} className="distortion-card">
+              <h4 style={{ color: theme.colors.primary, fontWeight: '700', marginBottom: '0.5rem', fontSize: '0.95rem' }}>{distortion.name}</h4>
+              <p style={{ color: 'var(--muted)', fontSize: '0.85rem', lineHeight: '1.5' }}>{distortion.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -350,6 +386,11 @@ export default function MindsetReframePage() {
         }
         button {
           transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        }
+        .distortion-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+          border-color: var(--primary);
         }
       `}</style>
     </div>
