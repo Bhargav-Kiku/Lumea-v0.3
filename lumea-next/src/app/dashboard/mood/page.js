@@ -36,7 +36,11 @@ export default function MoodPage() {
     { value: 1, label: "Calm", icon: "flare", color: theme.colors.primary, glow: "rgba(186,195,255,0.4)" },
     { value: 2, label: "Joyful", icon: "wb_sunny", color: theme.colors.tertiary, glow: "rgba(241,231,255,0.4)" },
     { value: 3, label: "Anxious", icon: "grain", color: theme.colors.secondary, glow: "rgba(129, 140, 248, 0.4)" },
-    { value: 4, label: "Sad", icon: "water_drop", color: "#b0bbff", glow: "rgba(176,187,255,0.4)" }
+    { value: 4, label: "Sad", icon: "water_drop", color: "#b0bbff", glow: "rgba(176,187,255,0.4)" },
+    { value: 5, label: "Frustrated", icon: "local_fire_department", color: "#ef4444", glow: "rgba(239, 68, 68, 0.4)" },
+    { value: 6, label: "Tired", icon: "bedtime", color: "#a78bfa", glow: "rgba(167, 139, 250, 0.4)" },
+    { value: 7, label: "Energized", icon: "bolt", color: "#fbbf24", glow: "rgba(251, 191, 36, 0.4)" },
+    { value: 8, label: "Overwhelmed", icon: "storm", color: "#6366f1", glow: "rgba(99, 102, 241, 0.4)" }
   ];
 
   useEffect(() => {
@@ -122,14 +126,17 @@ export default function MoodPage() {
     try {
       if (!user) return;
 
-      const limit = viewRange === 'weekly' ? 7 : 30;
+      const daysToFetch = viewRange === 'weekly' ? 7 : 30;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysToFetch);
+      startDate.setHours(0, 0, 0, 0);
 
       const { data, error } = await supabase
         .from('mood_entries')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(limit); 
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setRecentEntries(data || []);

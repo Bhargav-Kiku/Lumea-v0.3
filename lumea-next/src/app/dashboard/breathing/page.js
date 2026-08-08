@@ -5,7 +5,7 @@ import { theme } from '@/lib/theme';
 import PageHeader from '@/components/PageHeader';
 
 export default function LunarBreathingPage() {
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   return (
     <div className="relative overflow-hidden w-full max-w-lg mx-auto" style={{ paddingBottom: '6rem' }}>
@@ -25,7 +25,13 @@ export default function LunarBreathingPage() {
       <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', marginBottom: '4rem', position: 'relative' }}>
         
         {/* The Orb Stack */}
-        <div style={{ position: 'relative', width: '280px', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div 
+          onClick={() => setIsPlaying(!isPlaying)}
+          style={{ position: 'relative', width: '280px', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+          title={isPlaying ? 'Click to Pause' : 'Click to Start'}
+        >
           
           {/* Inner Core */}
           <div className={`orb-core ${!isPlaying ? 'paused' : ''}`} style={{
@@ -48,8 +54,12 @@ export default function LunarBreathingPage() {
           
           {/* Current Instruction */}
           <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
-             <h2 className={`orb-text ${!isPlaying ? 'paused' : ''}`} style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '0.25rem', letterSpacing: '-0.025em' }}> </h2>
-             <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: 0.8 }}>4 Seconds</p>
+             <h2 className={isPlaying ? "orb-text" : ""} style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--foreground)', marginBottom: '0.25rem', letterSpacing: '-0.025em' }}>
+               {!isPlaying && 'Ready?'}
+             </h2>
+             <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontWeight: '600', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: 0.8 }}>
+               {isPlaying ? '(Click to pause)' : 'Click to start'}
+             </p>
           </div>
         </div>
 
