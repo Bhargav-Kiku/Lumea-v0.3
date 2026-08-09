@@ -1,11 +1,152 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { theme } from '@/lib/theme';
 import PageHeader from '@/components/PageHeader';
 
+const AMBIENT_TRACKS = [
+  {
+    id: 1,
+    title: 'Weightless',
+    subtitle: 'Marconi Union',
+    icon: 'spa',
+    url: '/music/Marconi%20Union%20-%20Weightless%20(Official%20Video).mp3'
+  },
+  {
+    id: 2,
+    title: 'Moving Mountains',
+    subtitle: 'Kilometre Club',
+    icon: 'landscape',
+    url: '/music/Kilometre%20Club%20-%20Moving%20Mountains%20%5Bambient%20relaxing%20classical%5D.mp3'
+  },
+  {
+    id: 3,
+    title: 'Magnetic',
+    subtitle: 'NCS Ambient',
+    icon: 'headphones',
+    url: '/music/magnetic--pluggnb--ncs---copyright-free-music.mp3'
+  }
+];
+
 export default function LunarBreathingPage() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+
+  const audioRef = useRef(null);
+  const currentTrack = AMBIENT_TRACKS[currentTrackIndex];
+
+  // Load persistent timer on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTime = localStorage.getItem('lumea_breathing_time');
+      if (savedTime) setTotalTime(parseInt(savedTime, 10));
+    }
+  }, []);
+
+  // Increment timer while playing
+  useEffect(() => {
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setTotalTime((prev) => {
+          const newTime = prev + 1;
+          localStorage.setItem('lumea_breathing_time', newTime.toString());
+          return newTime;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  // Initialize Audio
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !audioRef.current) {
+      audioRef.current = new Audio(currentTrack.url);
+      audioRef.current.loop = true;
+    }
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      setProgress((audio.currentTime / (audio.duration || 1)) * 100);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, []); // Run once on mount
+
+  // Handle Track Changes
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    if (audioRef.current.src !== currentTrack.url) {
+      audioRef.current.src = currentTrack.url;
+      audioRef.current.load();
+      if (isPlaying && !isMuted) {
+        audioRef.current.play().catch(e => console.log('Autoplay blocked:', e));
+      }
+    }
+  }, [currentTrackIndex, currentTrack.url]); // Re-run when track changes
+
+  // Sync Audio Playback with Breathing State & Mute
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    audioRef.current.muted = isMuted;
+
+    if (isPlaying && !isMuted) {
+      audioRef.current.play().catch(e => console.log('Autoplay blocked:', e));
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, isMuted]);
+
+  const toggleBreathing = () => setIsPlaying(!isPlaying);
+  const nextTrack = () => setCurrentTrackIndex((prev) => (prev + 1) % AMBIENT_TRACKS.length);
+  const prevTrack = () => setCurrentTrackIndex((prev) => (prev - 1 + AMBIENT_TRACKS.length) % AMBIENT_TRACKS.length);
+  const toggleMute = () => setIsMuted(!isMuted);
+  
+  const formatTotalTime = (totalSeconds) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
+
+  const formatTime = (timeInSeconds) => {
+    if (isNaN(timeInSeconds) || timeInSeconds === 0) return '0:00';
+    const m = Math.floor(timeInSeconds / 60);
+    const s = Math.floor(timeInSeconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleSeek = (e) => {
+    if (!audioRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const MathMax = Math.max(0, Math.min(1, x / rect.width));
+    const newTime = MathMax * (audioRef.current.duration || 0);
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
 
   return (
     <div className="relative overflow-hidden w-full max-w-lg mx-auto" style={{ paddingBottom: '6rem' }}>
@@ -24,9 +165,22 @@ export default function LunarBreathingPage() {
       {/* Reflection Orb / Breathing Guide */}
       <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', marginBottom: '4rem', position: 'relative' }}>
         
+        {/* Mindful Timer Badge */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '3rem',
+          padding: '0.5rem 1.25rem', background: 'rgba(255,255,255,0.03)',
+          border: '1px solid var(--glass-border)', borderRadius: '30px',
+          color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.1)', backdropFilter: 'blur(10px)',
+          letterSpacing: '0.05em', textTransform: 'uppercase'
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>schedule</span>
+          Mindful Time: {formatTotalTime(totalTime)}
+        </div>
+
         {/* The Orb Stack */}
         <div 
-          onClick={() => setIsPlaying(!isPlaying)}
+          onClick={toggleBreathing}
           style={{ position: 'relative', width: '280px', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s ease' }}
           onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
           onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -74,7 +228,6 @@ export default function LunarBreathingPage() {
 
       {/* Information & Technique */}
       <section style={{ width: '100%', marginBottom: '4rem' }}>
-        {/* Bento Grid Instructions */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           {[
             { icon: 'air', title: 'Inhale', desc: 'Fill your lungs slowly for 4s.' },
@@ -94,9 +247,9 @@ export default function LunarBreathingPage() {
         </div>
       </section>
 
-      {/* Controls */}
+      {/* Main Play Controls */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5rem', width: '100%' }}>
-        <button onClick={() => setIsPlaying(!isPlaying)} style={{ 
+        <button onClick={toggleBreathing} style={{ 
           display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem 3rem',
           background: 'var(--primary)', color: '#fff',
           borderRadius: theme.borderRadius.full, border: 'none', cursor: 'pointer',
@@ -110,28 +263,73 @@ export default function LunarBreathingPage() {
         </button>
       </div>
 
-      {/* Decorative Mood Card */}
+      {/* Spotify-Like Ambient Player */}
       <div style={{ 
-        width: '100%', padding: '2rem', borderRadius: theme.borderRadius.xl, position: 'relative', overflow: 'hidden',
-        background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)'
+        width: '100%', padding: '1.5rem 2rem', borderRadius: theme.borderRadius.xl, position: 'relative', overflow: 'hidden',
+        background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
       }}>
-        <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.1 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '8rem' }}>nights_stay</span>
+        {/* Background Decorative Icon */}
+        <div style={{ position: 'absolute', top: 0, right: 0, padding: '1rem', opacity: 0.05, pointerEvents: 'none' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '10rem' }}>{currentTrack.icon}</span>
         </div>
         
-        <p style={{ fontSize: '0.75rem', color: theme.colors.primary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>Atmosphere</p>
-        <h4 style={{ fontSize: '1.25rem', color: theme.colors.foreground, fontWeight: '700', marginBottom: '0.75rem' }}>Midnight Forest</h4>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: theme.colors.onSurfaceVariant, marginBottom: '1.5rem' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>volume_up</span>
-          <span style={{ fontSize: '0.85rem' }}>Soft wind and distant crickets</span>
+        {/* Header/Track Info */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', position: 'relative', zIndex: 2 }}>
+          <div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>{currentTrack.icon}</span>
+              Ambient Track
+            </p>
+            <h4 style={{ fontSize: '1.4rem', color: 'var(--foreground)', fontWeight: '800', marginBottom: '0.2rem' }}>{currentTrack.title}</h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{currentTrack.subtitle}</p>
+          </div>
+          
+          <button onClick={toggleMute} style={{ 
+            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', 
+            width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            cursor: 'pointer', color: isMuted ? 'var(--muted)' : 'var(--primary)', transition: 'all 0.2s ease' 
+          }} title={isMuted ? 'Unmute' : 'Mute'}>
+            <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>{isMuted ? 'volume_off' : 'volume_up'}</span>
+          </button>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ flex: 1, height: '4px', background: 'var(--glass-border)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: '60%', background: 'var(--primary)', borderRadius: '4px' }}></div>
+        {/* Playback Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', zIndex: 2 }}>
+          
+          {/* Progress Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontFamily: 'monospace', width: '35px', textAlign: 'right' }}>{formatTime(currentTime)}</span>
+            
+            <div 
+              onClick={handleSeek}
+              style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+            >
+              <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${progress}%`, background: 'var(--primary)', borderRadius: '4px', transition: 'width 0.1s linear' }}></div>
+            </div>
+            
+            <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontFamily: 'monospace', width: '35px' }}>{formatTime(duration)}</span>
           </div>
-          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>12:04 / 20:00</span>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+            <button onClick={prevTrack} style={{ background: 'none', border: 'none', color: 'var(--foreground)', cursor: 'pointer', display: 'flex', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={e => e.currentTarget.style.opacity = 1} onMouseOut={e => e.currentTarget.style.opacity = 0.7}>
+              <span className="material-symbols-outlined" style={{ fontSize: '2rem' }}>skip_previous</span>
+            </button>
+            
+            <button onClick={toggleBreathing} style={{ 
+              background: 'var(--primary)', border: 'none', color: '#fff', width: '56px', height: '56px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 5px 15px var(--primary-glow)',
+              transition: 'transform 0.2s'
+            }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+              <span className="material-symbols-outlined" style={{ fontSize: '2rem' }}>{isPlaying && !isMuted ? 'pause' : 'play_arrow'}</span>
+            </button>
+
+            <button onClick={nextTrack} style={{ background: 'none', border: 'none', color: 'var(--foreground)', cursor: 'pointer', display: 'flex', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={e => e.currentTarget.style.opacity = 1} onMouseOut={e => e.currentTarget.style.opacity = 0.7}>
+              <span className="material-symbols-outlined" style={{ fontSize: '2rem' }}>skip_next</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
