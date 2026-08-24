@@ -32,7 +32,7 @@ export async function POST(request) {
 Analyze the user's recent mood entries and provide a warm, poetic, 1-2 sentence insight about their emotional patterns. 
 Be encouraging and specific about what you notice. 
 ${themeId === 'night-sky' ? 'Use gentle celestial and star-themed metaphors.' : 'Use human-centric, grounded metaphors about growth, flow, and inner peace. Avoid celestial/star references.'}
-Never diagnose or give clinical advice. Keep it to 30 words max.`
+Never diagnose or give clinical advice. Keep it to 30 words max. /no_think`
         },
         {
           role: 'user',

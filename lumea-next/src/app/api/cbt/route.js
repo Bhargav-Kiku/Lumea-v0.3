@@ -43,7 +43,8 @@ Instructions:
 {
   "reply": "Your conversational response here",
   "detected_distortion": "Name of the distortion if identified, otherwise null"
-}`;
+}
+/no_think`;
 
     const apiMessages = [
       { role: 'system', content: systemPrompt },

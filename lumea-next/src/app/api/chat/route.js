@@ -40,7 +40,8 @@ export async function POST(request) {
     systemPrompt += "Guidelines:\n" +
       "- Be concise and deeply empathetic.\n" +
       "- Never provide medical or clinical advice.\n" +
-      "- If the user expresses extreme distress, de-escalate with profound care and gently direct them to the professional resources available in their safety panel."
+      "- If the user expresses extreme distress, de-escalate with profound care and gently direct them to the professional resources available in their safety panel.\n" +
+      "/no_think"
 
     if (current_emotion && !current_emotion.startsWith('⚠️')) {
       const contextPrefix = isNightSky ? "[Celestial Context: The seeker" : "[Emotional Context: The user";
