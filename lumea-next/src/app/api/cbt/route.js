@@ -43,8 +43,7 @@ Instructions:
 {
   "reply": "Your conversational response here",
   "detected_distortion": "Name of the distortion if identified, otherwise null"
-}
-/no_think`;
+}`;
 
     const apiMessages = [
       { role: 'system', content: systemPrompt },
@@ -59,13 +58,16 @@ Instructions:
       messages: apiMessages,
       temperature: 0.5,
       max_tokens: 300,
+      reasoning_effort: "none",
       response_format: { type: "json_object" }
     });
 
-    const content = chatCompletion.choices[0]?.message?.content;
+    let content = chatCompletion.choices[0]?.message?.content;
     if (!content) {
       throw new Error("Empty response from AI engine.");
     }
+    // Strip any <think>...</think> blocks that may leak through
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
     return new Response(content, {
       headers: { 'Content-Type': 'application/json' }

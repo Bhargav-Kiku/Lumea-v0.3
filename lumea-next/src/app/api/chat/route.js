@@ -40,8 +40,7 @@ export async function POST(request) {
     systemPrompt += "Guidelines:\n" +
       "- Be concise and deeply empathetic.\n" +
       "- Never provide medical or clinical advice.\n" +
-      "- If the user expresses extreme distress, de-escalate with profound care and gently direct them to the professional resources available in their safety panel.\n" +
-      "/no_think"
+      "- If the user expresses extreme distress, de-escalate with profound care and gently direct them to the professional resources available in their safety panel."
 
     if (current_emotion && !current_emotion.startsWith('⚠️')) {
       const contextPrefix = isNightSky ? "[Celestial Context: The seeker" : "[Emotional Context: The user";
@@ -61,17 +60,61 @@ export async function POST(request) {
       messages: cleanMessages,
       temperature: 0.7,
       max_tokens: 500,
+      reasoning_effort: "none",
       stream: true
     })
 
-    // Create a ReadableStream for response streaming
+    // Create a ReadableStream for response streaming.
+    // The think-filter state machine suppresses any <think>...</think> blocks
+    // that leak through despite reasoning_effort: 'none'.
     const stream = new ReadableStream({
       async start(controller) {
+        let inThinkBlock = false
+        let buffer = ""
+
         for await (const chunk of chatCompletion) {
           const content = chunk.choices[0]?.delta?.content || ""
-          if (content) {
-            controller.enqueue(new TextEncoder().encode(content))
+          if (!content) continue
+
+          buffer += content
+
+          // Drain buffer: suppress everything inside <think>...</think>
+          let output = ""
+          while (buffer.length > 0) {
+            if (inThinkBlock) {
+              const end = buffer.indexOf("</think>")
+              if (end === -1) {
+                // Still inside think block, discard and wait for more chunks
+                buffer = ""
+                break
+              } else {
+                // Found closing tag — exit think block and continue
+                buffer = buffer.slice(end + 8)
+                inThinkBlock = false
+              }
+            } else {
+              const start = buffer.indexOf("<think>")
+              if (start === -1) {
+                // No think block — flush everything
+                output += buffer
+                buffer = ""
+              } else {
+                // Found opening tag — flush up to it and enter think block
+                output += buffer.slice(0, start)
+                buffer = buffer.slice(start + 7)
+                inThinkBlock = true
+              }
+            }
           }
+
+          if (output) {
+            controller.enqueue(new TextEncoder().encode(output))
+          }
+        }
+
+        // Flush any remaining non-think content
+        if (!inThinkBlock && buffer) {
+          controller.enqueue(new TextEncoder().encode(buffer))
         }
         controller.close()
       }
