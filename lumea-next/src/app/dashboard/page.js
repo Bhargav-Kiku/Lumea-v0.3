@@ -19,10 +19,10 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const moodOptions = [
-    { value: 1, label: 'Calm',    color: '#bac3ff', glow: 'rgba(186,195,255,0.5)' },
-    { value: 2, label: 'Joyful',  color: '#f1e7ff', glow: 'rgba(241,231,255,0.5)' },
+    { value: 1, label: 'Calm', color: '#bac3ff', glow: 'rgba(186,195,255,0.5)' },
+    { value: 2, label: 'Joyful', color: '#f1e7ff', glow: 'rgba(241,231,255,0.5)' },
     { value: 3, label: 'Anxious', color: '#818cf8', glow: 'rgba(129,140,248,0.5)' },
-    { value: 4, label: 'Sad',     color: '#7dd3fc', glow: 'rgba(125,211,252,0.5)' },
+    { value: 4, label: 'Sad', color: '#7dd3fc', glow: 'rgba(125,211,252,0.5)' },
   ];
 
   // Deterministic positions for up to 10 stars (now particles)
@@ -67,8 +67,8 @@ export default function DashboardPage() {
             });
             const json = await res.json();
             setAiInsight(json.insight || '');
-          } catch { 
-            setAiInsight(currentTheme.id === 'night-sky' ? 'Your stars are aligning beautifully.' : 'Your emotional journey is unfolding beautifully.'); 
+          } catch {
+            setAiInsight(currentTheme.id === 'night-sky' ? 'Your stars are aligning beautifully.' : 'Your emotional journey is unfolding beautifully.');
           }
         } else {
           setAiInsight(currentTheme.copy.moodSubtitle);
@@ -81,27 +81,27 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem', position: 'relative' }}>
-      
+
       {/* 1. Personalized Greeting Section */}
       <section style={{ marginBottom: '3rem', animation: 'fadeIn 0.8s ease-out' }}>
-        <h1 style={{ 
-          fontSize: '3.5rem', 
-          fontWeight: '800', 
-          letterSpacing: '-0.025em', 
-          marginBottom: '0.8rem', 
+        <h1 style={{
+          fontSize: '3.5rem',
+          fontWeight: '800',
+          letterSpacing: '-0.025em',
+          marginBottom: '0.8rem',
           color: 'var(--foreground)',
           fontFamily: "'Plus Jakarta Sans', sans-serif"
         }}>
           {currentTheme.id === 'night-sky' ? `${greeting}, ${name}` : 'Dashboard'}
         </h1>
-        <p style={{ 
-          color: 'var(--muted)', 
-          fontSize: '1.2rem', 
-          maxWidth: '600px', 
+        <p style={{
+          color: 'var(--muted)',
+          fontSize: '1.2rem',
+          maxWidth: '600px',
           lineHeight: '1.6',
           fontWeight: '500'
         }}>
-          {currentTheme.id === 'night-sky' 
+          {currentTheme.id === 'night-sky'
             ? `${currentTheme.copy.dashboardGreetingSuffix}. Your inner sky is clear today.`
             : "Welcome back to your sanctuary. Here's an overview of your progress."}
         </p>
@@ -110,15 +110,15 @@ export default function DashboardPage() {
       {/* 2. Quick Actions */}
       <section className="bento-grid" style={{ marginBottom: '4rem' }}>
         {/* Connect / Start Chat */}
-        <button className="bento-3" onClick={() => router.push('/dashboard/chat')} style={{ 
-          background: `linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)`, 
-          borderRadius: theme.borderRadius.lg, 
-          padding: '1.5rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          border: 'none', 
-          cursor: 'pointer', 
+        <button className="bento-3" onClick={() => router.push('/dashboard/chat')} style={{
+          background: `linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)`,
+          borderRadius: theme.borderRadius.lg,
+          padding: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          border: 'none',
+          cursor: 'pointer',
           boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
           transition: 'transform 0.2s',
           textAlign: 'left',
@@ -132,15 +132,15 @@ export default function DashboardPage() {
         </button>
 
         {/* Log / Record Mood */}
-        <button className="bento-3" onClick={() => router.push('/dashboard/mood')} style={{ 
-          background: 'var(--glass-bg)', 
-          backdropFilter: 'blur(20px)', 
-          borderRadius: theme.borderRadius.lg, 
-          padding: '1.5rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          border: `1px solid var(--glass-border)`, 
+        <button className="bento-3" onClick={() => router.push('/dashboard/mood')} style={{
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: theme.borderRadius.lg,
+          padding: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          border: `1px solid var(--glass-border)`,
           cursor: 'pointer',
           transition: 'all 0.2s',
           textAlign: 'left',
@@ -155,15 +155,15 @@ export default function DashboardPage() {
         </button>
 
         {/* Write / New Journal */}
-        <button className="bento-3" onClick={() => router.push('/dashboard/journal')} style={{ 
-          background: 'var(--glass-bg)', 
-          backdropFilter: 'blur(20px)', 
-          borderRadius: theme.borderRadius.lg, 
-          padding: '1.5rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          border: `1px solid var(--glass-border)`, 
+        <button className="bento-3" onClick={() => router.push('/dashboard/journal')} style={{
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: theme.borderRadius.lg,
+          padding: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          border: `1px solid var(--glass-border)`,
           cursor: 'pointer',
           transition: 'all 0.2s',
           textAlign: 'left',
@@ -276,11 +276,11 @@ export default function DashboardPage() {
       </section>
 
       {/* 4. Theme-aware Guidance / Quote */}
-      <section style={{ 
-        position: 'relative', 
-        padding: '4rem 2rem', 
-        borderRadius: theme.borderRadius.xl, 
-        overflow: 'hidden', 
+      <section style={{
+        position: 'relative',
+        padding: '4rem 2rem',
+        borderRadius: theme.borderRadius.xl,
+        overflow: 'hidden',
         textAlign: 'center',
         background: 'var(--glass-bg)',
         border: `1px solid var(--glass-border)`,
@@ -290,7 +290,7 @@ export default function DashboardPage() {
           <img alt="Atmospheric background" src={currentTheme.id === 'desert' ? "https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1000&q=80" : currentTheme.id === 'ocean' ? "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=1000&q=80" : "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1000&q=80"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--background), transparent, var(--background))' }}></div>
         </div>
-        
+
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
           <span style={{ fontSize: '2.5rem', color: 'var(--primary)', opacity: 0.4 }}>“</span>
           <p style={{ fontSize: '1.5rem', fontWeight: '500', lineHeight: '1.4', color: 'var(--foreground)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>

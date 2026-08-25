@@ -83,26 +83,35 @@ export async function POST(request) {
           while (buffer.length > 0) {
             if (inThinkBlock) {
               const end = buffer.indexOf("</think>")
-              if (end === -1) {
-                // Still inside think block, discard and wait for more chunks
-                buffer = ""
-                break
-              } else {
+              if (end !== -1) {
                 // Found closing tag — exit think block and continue
                 buffer = buffer.slice(end + 8)
                 inThinkBlock = false
+              } else {
+                // Still inside think block. 
+                // Discard everything EXCEPT the last 7 characters in case they are a partial "</think>"
+                if (buffer.length < 8) {
+                  break // Wait for more chunks
+                }
+                buffer = buffer.slice(-7)
+                break
               }
             } else {
               const start = buffer.indexOf("<think>")
-              if (start === -1) {
-                // No think block — flush everything
-                output += buffer
-                buffer = ""
-              } else {
+              if (start !== -1) {
                 // Found opening tag — flush up to it and enter think block
                 output += buffer.slice(0, start)
                 buffer = buffer.slice(start + 7)
                 inThinkBlock = true
+              } else {
+                // No full think block. 
+                // Flush everything EXCEPT the last 6 characters in case they are a partial "<think>"
+                if (buffer.length < 7) {
+                  break // Wait for more chunks
+                }
+                output += buffer.slice(0, -6)
+                buffer = buffer.slice(-6)
+                break
               }
             }
           }

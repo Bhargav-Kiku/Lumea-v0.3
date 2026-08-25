@@ -18,6 +18,19 @@ export default function ChatPage() {
   const [isSelfHarmRisk, setIsSelfHarmRisk] = useState(false);
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(true);
+
+  const toggleSound = () => {
+    setSoundEnabled(prev => {
+      const next = !prev;
+      soundEnabledRef.current = next;
+      if (!next && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      return next;
+    });
+  };
   
   // Session Tracking State
   const [sessions, setSessions] = useState([]);
@@ -211,14 +224,23 @@ export default function ChatPage() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        aiResponseText += chunk;
+        
+        // Groq is extremely fast, so we throttle the output to simulate natural typing.
+        // We output 2 characters at a time with a small delay.
+        const step = 2;
+        for (let i = 0; i < chunk.length; i += step) {
+          aiResponseText += chunk.slice(i, i + step);
 
-        // Update the last message (the AI assistant's stream)
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: aiResponseText };
-          return updated;
-        });
+          // Update the last message (the AI assistant's stream)
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: 'assistant', content: aiResponseText };
+            return updated;
+          });
+
+          // 15ms delay per 2 characters (~130 chars/sec)
+          await new Promise(resolve => setTimeout(resolve, 15));
+        }
       }
 
       // Save Assistant Message to DB
@@ -231,7 +253,7 @@ export default function ChatPage() {
       }
 
       // Browser TTS (Auto Read Reply)
-      if (window.speechSynthesis) {
+      if (soundEnabledRef.current && window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(aiResponseText);
         utterance.rate = 0.9; // empathetic tone slightly slower
         window.speechSynthesis.speak(utterance);
@@ -287,6 +309,34 @@ export default function ChatPage() {
       >
         <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>history</span>
         <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>History</span>
+      </button>
+
+      {/* Sound Toggle Button */}
+      <button 
+        onClick={toggleSound}
+        style={{
+          position: 'absolute',
+          top: '1rem',
+          right: '1rem',
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '12px',
+          padding: '0.6rem 1rem',
+          color: soundEnabled ? 'var(--primary)' : 'var(--muted)',
+          cursor: 'pointer',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>
+          {soundEnabled ? 'volume_up' : 'volume_off'}
+        </span>
+        <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>
+          {soundEnabled ? 'Sound On' : 'Sound Off'}
+        </span>
       </button>
 
       {/* History Sidebar Override/Drawer */}
