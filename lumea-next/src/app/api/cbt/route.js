@@ -54,7 +54,7 @@ Instructions:
     ];
 
     const chatCompletion = await groq.chat.completions.create({
-      model: "qwen/qwen3.6-27b",
+      model: "qwen/qwen3.8-27b",
       messages: apiMessages,
       temperature: 0.5,
       max_tokens: 300,
